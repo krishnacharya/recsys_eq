@@ -1,17 +1,31 @@
 import numpy as np
+from User import * #Class for users, stores num_users, user_dimension
 
-def linear_probability(content_vector, remaining_array, user_array):
-  #this returns a 1x num_users vector representing the probability for each user to be shown this content
-  product = user_array @ np.vstack((remaining_array,content_vector)).T
-  return (product/product.sum(axis=1)[:,None])[:,-1]
+def linear_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray)->np.ndarray:
+    '''
+        content_vector : shape is (dimension,)
+        remaining_array: shape in (N_producers - 1, dimension)
+        user_array: shape is (N_users, dimension)
+        Returns
+            numpy array of shape (N_user,), linear proabibility of each user getting recommended to content_vector    
+    '''
+    product = user_array @ np.vstack((remaining_array, content_vector)).T # has shape N_user x N_prod, product_ij stores what user i rates producer j
+    prob =  product / product.sum(axis=1)[:,None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
+    return prob[:, -1] #prob_ij contains with what probability user i is recommended movie j; last column will have all probabilities of users going to content_vector
 
-def exponential_probability(content_vector, remaining_array, user_array):
-  exp = np.exp(user_array@content_vector)[:, None]
-  #this returns a 1x num_users vector representing the probability for each user to be shown this content
-  rem = user_array @ remaining_array.T
-  return (exp/(exp + np.exp(rem.sum(axis=1)[:,None]))).flatten()
+def softmax_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray)->np.ndarray:
+    '''
+        content_vector : shape is (dimension,)
+        remaining_array: shape in (N_producers - 1, dimension)
+        user_array: shape is (N_users, dimension)
+        Returns
+            numpy array of shape (N_user,), softmax proabibility of each user getting recommended to content_vector   
+    '''
+    product = np.exp(user_array @ np.vstack((remaining_array, content_vector)).T) # has shape N_user x N_prod
+    prob = product / product.sum(axis=1)[:, None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
+    return prob[:, -1]
 
-def engagement_utility(content_vector, remaining_array, user_array, prob="linear"):
+def engagement_utility(content_vector, remaining_array, users:Users, prob="linear"):
   #Args:
   # Content - The index of the vector representing the content in the producer_array
   # producer_array - a num_prodcuers x d array representing each contetn produced in the system
@@ -22,14 +36,17 @@ def engagement_utility(content_vector, remaining_array, user_array, prob="linear
   elif prob == "exponential":
     probability_function = exponential_probability
   #get probabilty for each user
-  probs = probability_function(content_vector, remaining_array, user_array)
+  probs = probability_function(content_vector, remaining_array, users.user_array)
   #get value for each user
-  prods = user_array @ content_vector
+  prods = users.user_array @ content_vector
   #since we define all users, we can just take an average
   #TODO: make a version of this for a distribution of users
-  return sum(probs*prods)/num_users
+  return sum(probs*prods)/users.num_users
 
-def get_best_response(remaining_array, user_array, prob="linear"):
+def get_best_response(remaining_array, users:Users, prob="linear"):
+  '''
+    remaining_array has shape (#producers-1, d)
+  '''
   #gets the best response to the other contents given the user array
   #TODO: this is probably dumb and there is a better way of doing it
 
@@ -38,17 +55,17 @@ def get_best_response(remaining_array, user_array, prob="linear"):
   # users_array - an num_users x d array representing all_users and their preferences
   max_util = -1
   best_row = None
-  for row in np.eye(user_dimension):
-    util = engagement_utility(row, remaining_array, user_array, prob=prob)
-    if util> max_util:
+  for row in np.eye(users.user_dimension):
+    util = engagement_utility(row, remaining_array, users.user_array, prob=prob)
+    if util > max_util:
       best_row = row
       max_util = util
   return best_row
 
-def eval_position(producer_array, user_array, prob="linear"):
+def eval_position(producer_array, users:Users, prob="linear"):
   #returns True if all content vectors are the best response to one another given the user array
   for i, content in enumerate(producer_array):
-    row = get_best_response(np.delete(producer_array, i, 0), user_array, prob)
+    row = get_best_response(np.delete(producer_array, i, 0), users.user_array, prob)
     if not np.all(row==content):
       return False
   return True
@@ -56,23 +73,23 @@ def eval_position(producer_array, user_array, prob="linear"):
 ##This is slow, so skip it if you dont need it
 #This generates all possible combinations of producers given the dimesnsion and number of producers
 
-def generate_equilibria(user_array):
+def generate_equilibria(users:Users):
   def equivalent_combinations(combinations):
     s = set()
     for c in combinations:
       s.add(tuple(sorted(c)))
     return s
   results = []
-  combinations = np.array(np.meshgrid(*[np.arange(user_dimension) for i in range(num_producers)])).T.reshape(-1, num_producers)
+  combinations = np.array(np.meshgrid(*[np.arange(users.user_dimension) for i in range(num_producers)])).T.reshape(-1, num_producers)
   eq_comb = equivalent_combinations(combinations) # equivalent combinations, just permutation invariant ones of the above
-  I = np.eye(user_dimension)
+  I = np.eye(users.user_dimension)
   for combination in eq_comb:
     producer_array = I[list(combination)]
-    if eval_position(producer_array, user_array, prob='linear'):
+    if eval_position(producer_array, users.user_array, prob='linear'):
       results.append(tuple(np.sum(producer_array, axis = 0)))
   return list(set(results))
 
-def search_best_response(users=None, producers=np.eye(user_dimension)[np.random.choice(user_dimension, num_producers)], prob="linear"):
+def search_best_response(users=None, producers=np.eye(users.user_dimension)[np.random.choice(users.user_dimension, num_producers)], prob="linear"):
     #working on vectorizing this
     #gets the best reponse for each producer
     idx = np.arange(1, num_producers) - np.tri(num_producers, num_producers-1, k=-1, dtype=bool)
@@ -89,14 +106,14 @@ def get_equilibrium():
   #runs iters of producers searching for linear best reponse
   converged = False
   print("##### PRODUCERS FOR ITER 0\n")
-  producers=np.eye(user_dimension)[np.random.choice(user_dimension, num_producers)]
+  producers=np.eye(users.user_dimension)[np.random.choice(users.user_dimension, num_producers)]
   #producers = np.array([[1,0,0,0,0] for i in range(num_producers)])
   print(producers)
   print("\n")
   i = 1
   while True:
     print(f"##### PRODUCERS FOR ITER {i}\n")
-    producers, converged = search_best_response(user_array, producers, prob="exponential")
+    producers, converged = search_best_response(users.user_array, producers, prob="exponential")
     print(producers)
     print("\n")
     if converged:
