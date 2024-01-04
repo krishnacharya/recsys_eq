@@ -1,6 +1,7 @@
 import surprise
 from surprise import NMF
 from sklearn.preprocessing import normalize
+import numpy as np
 
 def generate_uniform_user(dimension):
   #unifrom sampling form the probability simplex
@@ -13,4 +14,3 @@ def get_user_embeddings(user_dimension, data: surprise.Dataset):
   cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
   users = normalize(algo.pu, "l1")
   return users
-  
