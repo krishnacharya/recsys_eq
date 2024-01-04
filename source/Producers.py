@@ -111,4 +111,24 @@ class ProducersEngagementGame:
         return None, i # if BR dynamics do not converge
         
     def brute_force_NEsearch(self):
-        pass
+        '''
+            Searches all (permutationally invariant) combinations
+            and check if it's a NE
+        '''
+        def equivalent_combinations(combinations): 
+            '''
+                returns a set of tuples, permutationally invariant ones of combinations, by sorting
+            '''
+            s = set()
+            for c in combinations:
+                s.add(tuple(sorted(c)))
+            return s
+        combinations = np.array(np.meshgrid(*[np.arange(self.dimension) for i in range(self.num_producers)])).T.reshape(-1, self.num_producers) # shape [d^(#producers), #producers]
+        eq_comb = equivalent_combinations(combinations) # set of tuples
+        I = np.eye(self.dimension)
+        for comb in eq_comb:
+            producers = I[list(comb)] #shape (N_producers, dimension)
+            _ , is_NE =  self.find_update_best_response(producers)
+            if is_NE:
+                self.BruteForce_NE.add(tuple(np.sum(producers, axis = 0))) # adds producer profile, # of producers in each direction to set of NE
+        return self.BruteForce_NE
