@@ -1,5 +1,7 @@
 import surprise
-from surprise import NMF
+from surprise import NMF, SVD
+from surprise import Dataset
+from surprise.model_selection import cross_validate
 from sklearn.preprocessing import normalize
 import numpy as np
 
