@@ -49,4 +49,4 @@ for d in dimensions:
 df_detailed = pd.DataFrame(res_detailed)
 df_detailed.to_csv('../csv_results/num_iters_linear_movielens100k_detailed.csv', encoding='utf-8', index=False)
 df_aggr = pd.DataFrame(res_aggregate)
-df_aggr.to_csv('../csv_results/num_iters_linear_movielens100k_detailed_aggregate.csv', encoding='utf-8', index=False)
+df_aggr.to_csv('../csv_results/num_iters_linear_movielens100k_aggregate.csv', encoding='utf-8', index=False)
