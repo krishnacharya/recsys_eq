@@ -20,7 +20,7 @@ dataset = Dataset.load_builtin('ml-100k')
 # Large space
 dimensions = [5, 10, 15, 20] # number of dimensions for latent/embedding
 num_prod_array = np.arange(10, 110, 10) # [10, 20...100] Producers
-runs = 20
+runs = 40
 
 # TOY search space
 # dimensions = [5, 10, 15] # number of dimensions for latent/embedding
@@ -58,6 +58,6 @@ with tqdm(total = tot_loop) as pbar:
             res_aggregate.append(di_aggregate)
 
 df_detailed = pd.DataFrame(res_detailed)
-df_detailed.to_csv('../csv_results/linear_detailed.csv', encoding='utf-8', index=False)
+df_detailed.to_csv('../csv_results/linear_detailed_40runs.csv', encoding='utf-8', index=False)
 df_aggr = pd.DataFrame(res_aggregate)
-df_aggr.to_csv('../csv_results/linear_aggr.csv', encoding='utf-8', index=False)
+df_aggr.to_csv('../csv_results/linear_aggr_40runs.csv', encoding='utf-8', index=False)
