@@ -37,6 +37,30 @@ def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:n
     prods = user_array @ content_vector # what each user rates the content_vector shape (N_user,)
     return np.sum(probs * prods)
 
+def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear'):
+    '''
+        producers: shape N_producers x dimension
+        user_array: shape N_users x dimension
+            Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
+        Returns 
+            dir_producers direction of basis vector for each producer, shape (N_producers, )
+            engagement utility for each producer, shape (N_producers, )
+            engagement utility for each user, shape (N_users, )
+    '''
+    prodt = producers.T  # shape (dimension, N_prod)
+    dir_producers = np.argmax(prodt, axis=0)
+    ratings = user_array @ prodt # shape (N_user, N_prod) ratings ij has what user i rates producer j's content <c_i, s_j>
+    prob = None
+    if prob_type == 'linear':
+        prob = ratings / ratings.sum(axis=1)[:, None] # prob_ij stores <c_i, s_j> / sum_k <c_i, s_k>
+    elif prob_type == 'softmax':
+        exp_ratings = np.exp(ratings)
+        prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
+    else:
+        raise NotImplementedError
+    utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
+    return dir_producers, utility.sum(axis=0), utility.sum(axis = 1)
+
 class ProducersEngagementGame:
     '''
         Each producer's strategy space is the ball of L1 norm <= 1, restricted to positive orthant
@@ -95,11 +119,11 @@ class ProducersEngagementGame:
         '''
             Single run of best response dynamics starting from random +ve basis vectors for each producer
             Once we hit a Nash Equilibrium/or max_iterations stop
-
             Returns 
-            (NE profile, # of iterations till convergence) profile contains the number of users along each basis vector
+            (NE, NE compact profile, # of iterations till convergence) 
+            NE is of shape (N_producers x dimension), NE profile contains the number of users along each basis vector
         '''
-        producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors
+        producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
         if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers}')
         for i in range(max_iter):
             producers, converged = self.find_update_best_response(producers)
@@ -107,13 +131,14 @@ class ProducersEngagementGame:
             if converged:
                 if verbose: print(f'Number of iterations to coverge: {i}')
                 self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
-                return np.sum(producers, axis=0), i
-        return None, i # if BR dynamics do not converge
+                return producers, np.sum(producers, axis=0), i
+        return None, None, i # if BR dynamics do not converge
         
     def brute_force_NEsearch(self):
         '''
             Searches all (permutationally invariant) combinations
             and check if it's a NE
+            Slow
         '''
         def equivalent_combinations(combinations): 
             '''
