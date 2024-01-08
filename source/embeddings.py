@@ -5,15 +5,19 @@ from surprise.model_selection import cross_validate
 from sklearn.preprocessing import normalize
 import numpy as np
 
+def generate_uniform_user(dimension):
+    '''
+      Sample a single user from the probability simplex of dimension=dimension \sum_j x_j = 1
+    '''
+    #unifrom sampling form the probability simplex
+    #reference : https://cs.stackexchange.com/questions/3227/uniform-sampling-from-a-simplex
+    return np.diff([0] + sorted(np.random.uniform(size=dimension-1)) + [1])
+
 def generate_uniform_users(dimension, num_users = 10000) -> np.array:
   '''
     Get a numpy array of shape num_users x dimension
     with each row representing a user on the proability simplex, i.e.\sum_j x_ij = 1
   '''
-  def generate_uniform_user(dimension):
-    #unifrom sampling form the probability simplex
-    #reference : https://cs.stackexchange.com/questions/3227/uniform-sampling-from-a-simplex
-    return np.diff([0] + sorted(np.random.uniform(size=dimension-1)) + [1])
   return np.array([generate_uniform_user(dimension=dimension) for _ in range(num_users)])
 
 def get_user_embeddings_movielens100k(user_dimension):
