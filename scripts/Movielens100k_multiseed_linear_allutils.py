@@ -44,7 +44,7 @@ with tqdm(total = tot) as pbar:
                                 
                     'NE': NE_compact,
                     'iters': iters,
-                    'user_dist': nue.sum(axis=1) / nue.sum(),
+                    'user_dist': nue.sum(axis=0) / nue.sum(),
                     'prod_dist': NE_compact / nprod
                 }
                 res.append(di)

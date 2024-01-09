@@ -122,8 +122,12 @@ class ProducersEngagementGame:
             Single run of best response dynamics starting from random +ve basis vectors for each producer
             Once we hit a Nash Equilibrium/or max_iterations stop
             Returns 
-            (NE, NE compact profile, # of iterations till convergence) 
-            NE is of shape (N_producers x dimension), NE profile contains the number of users along each basis vector
+            (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done) 
+            converged is True if NE found, False if not
+            last_profile is the of shape (N_producers, dimension)
+            last_profile compact is the # of users along each basis vector shape (dimensions,) 
+            
+            if BR dynamics have converged then last_profile will be a NE!
         '''
         producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
         if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
@@ -133,8 +137,8 @@ class ProducersEngagementGame:
             if converged:
                 if verbose: print(f'Number of iterations to coverge: {i}')
                 self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
-                return producers, np.sum(producers, axis=0), i
-        return None, None, i # if BR dynamics do not converge
+                return converged, producers, np.sum(producers, axis=0), i
+        return converged, producers, np.sum(producers, axis=0), i # if BR dynamics do not converge
         
     def brute_force_NEsearch(self):
         '''
