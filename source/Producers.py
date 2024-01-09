@@ -77,18 +77,20 @@ class ProducersEngagementGame:
         elif prob == 'softmax':
             self.probability_function = softmax_probability
     
-    def get_best_response(self, remaining_array:np.ndarray) -> np.ndarray:
+    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> np.ndarray:
         '''
             Best response for a producer, when all the other producers are frozen to remaining_array
             Parameters:
+                current_vec is a numpy array shape (dimension, )
                 remaining_array is a numpy array of shape (N_producers - 1, dimension)
             Returns
                 best_row is a numpy array of shape (d,), 
                 searching amongst positive basis vectors is sufficient 
                 due to properties of engagement utility
         '''
-        max_util = -1
-        best_row = None
+        # max_util = -1
+        max_util = engagement_utility(current_vec, self.probability_function(current_vec, remaining_array, self.users.user_array),  self.users.user_array)
+        best_row = current_vec # setting best_row and max utility as what the current vector gives
         for row in np.eye(self.dimension):
             probs = self.probability_function(row, remaining_array, self.users.user_array)
             util = engagement_utility(row, probs, self.users.user_array)
@@ -109,7 +111,7 @@ class ProducersEngagementGame:
             Note: We search amongst indices randomly
         '''
         for i in np.random.permutation(self.num_producers): # random permutation of arange(self.num_producers)
-            br = self.get_best_response(producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array
+            br = self.get_best_response(producers[i], producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array
             if not np.all(producers[i] == br): # found a best response, update and return
                 producers[i] = br
                 return producers, False
@@ -124,10 +126,10 @@ class ProducersEngagementGame:
             NE is of shape (N_producers x dimension), NE profile contains the number of users along each basis vector
         '''
         producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
-        if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers}')
+        if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
         for i in range(max_iter):
             producers, converged = self.find_update_best_response(producers)
-            if verbose: print(f'##### PRODUCERS FOR ITER {i} \n {producers}')
+            if verbose: print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
             if converged:
                 if verbose: print(f'Number of iterations to coverge: {i}')
                 self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
