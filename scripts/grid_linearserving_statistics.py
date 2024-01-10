@@ -10,7 +10,7 @@ from tqdm import tqdm
 import pandas as pd
 
 
-seeds = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] 
+seeds = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 dimension = [5, 10, 15, 20] # number of dimensions for latent/embedding
 n_prodarr = np.arange(10, 110, 10) # [10, 20...100] Producers
 
