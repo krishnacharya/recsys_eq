@@ -20,6 +20,11 @@ def generate_uniform_users(dimension, num_users = 10000) -> np.array:
   '''
   return np.array([generate_uniform_user(dimension=dimension) for _ in range(num_users)])
 
+def generate_sorted_synthetic(dimension, num_users = 10000) -> np.array:
+  ue = generate_uniform_users(dimension, num_users = num_users)
+  ue.sort(axis=1) # sorts each row ascending
+  return ue
+
 def get_user_embeddings_movielens100k(user_dimension):
   '''
     Gets embeddings for movielens 100k dataset
@@ -44,4 +49,3 @@ def user_embeddings_movielens100k_nmf(dimension):
   algo.fit(full_data)
   normalized_embeddings = normalize(algo.pu, "l1")
   return algo.pu, normalized_embeddings
-  
