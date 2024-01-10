@@ -12,7 +12,7 @@ num_users = 10000 # fixed
 num_prod = 100 # fixed
 dimensions = [5, 10, 15] # vary across 3 dims and see the kind of specialization seen at NE
 
-user_draws = 10 # number of draws of uniform user embeddings for each num_user x dimension
+user_draws = 10 # number zof draws of uniform user embeddings for each num_user x dimension
 Br_runs = 20
 
 res = []
