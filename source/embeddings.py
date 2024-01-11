@@ -27,7 +27,7 @@ def generate_skewed_users(dimension, num_users = 10000) -> np.array:
     with each row representing a user on the proability simplex, i.e.\sum_j x_ij = 1
   '''
   weights = np.sort(generate_uniform_user(dimension)) # shape d, from the probbability simplex
-  ue = generate_uniform_users(dimension, num_users = num_users) # Num users, d
+  ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
   return normalize(ue * weights, norm = "l1")
  
 def generate_sorted_synthetic(dimension, num_users = 10000) -> np.array:
