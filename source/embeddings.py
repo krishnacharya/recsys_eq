@@ -38,7 +38,7 @@ def generate_sorted_synthetic(dimension, num_users = 10000) -> np.array:
 def get_user_embeddings_movielens100k(user_dimension):
   '''
     Gets embeddings for movielens 100k dataset
-    Returns
+    Returns tuple
     User embeddings, and L1 normalized user embeddings
   '''
   data = Dataset.load_builtin("ml-100k")
@@ -50,7 +50,7 @@ def get_user_embeddings_movielens100k(user_dimension):
 def user_embeddings_movielens100k_nmf(dimension):
   '''
     Uses parameters from Krauth
-    Returns
+    Returns tuple 
     User embeddings, and L1 normalized user embeddings
   '''
   algo = NMF(n_factors=dimension, biased =False, reg_pu=0.08, reg_qi=0.08, n_epochs = 128)
