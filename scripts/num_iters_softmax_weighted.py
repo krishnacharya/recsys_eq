@@ -60,6 +60,6 @@ with tqdm(total = tot_loop) as pbar:
             res_aggregate.append(di_aggregate)
 
 df_detailed = pd.DataFrame(res_detailed)
-df_detailed.to_csv('../csv_results/softmax_detailed_40runs_weighted_toy.csv', encoding='utf-8', index=False)
+df_detailed.to_csv('../csv_results/softmax_detailed_40runs_weighted_seed17.csv', encoding='utf-8', index=False)
 df_aggr = pd.DataFrame(res_aggregate)
-df_aggr.to_csv('../csv_results/softmax_aggr_40runs_weighted_toy.csv', encoding='utf-8', index=False)
+df_aggr.to_csv('../csv_results/softmax_aggr_40runs_weighted_seed17.csv', encoding='utf-8', index=False)
