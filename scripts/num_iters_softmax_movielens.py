@@ -15,17 +15,16 @@ from sklearn.preprocessing import normalize
 
 
 # Large space
-# dimensions = [5, 10, 15, 20] # number of dimensions for latent/embedding
-# num_prod_array = np.arange(10, 110, 10) # [10, 20...100] Producers
-# runs = 40
-# seed = 17
-
+dimensions = [5, 10, 15, 20] # number of dimensions for latent/embedding
+num_prod_array = np.arange(10, 110, 10) # [10, 20...100] Producers
+runs = 40
 
 
 # TOY search space
-dimensions = [5, 10, 15] # number of dimensions for latent/embedding
-num_prod_array = np.arange(1, 5, 1) # 1..4 producers
-runs = 3
+# dimensions = [5, 10, 15] # number of dimensions for latent/embedding
+# num_prod_array = np.arange(1, 5, 1) # 1..4 producers
+# runs = 3
+
 seed = 17
 
 np.random.seed(seed = seed)

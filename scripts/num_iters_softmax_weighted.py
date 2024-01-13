@@ -13,12 +13,12 @@ from surprise.model_selection import cross_validate
 from sklearn.preprocessing import normalize
 
 
+num_users = 10000
 
 # Large space
 dimensions = [5, 10, 15, 20] # number of dimensions for latent/embedding
 num_prod_array = np.arange(10, 110, 10) # [10, 20...100] Producers
 runs = 40
-
 
 # TOY search space
 # dimensions = [5, 10, 15] # number of dimensions for latent/embedding
@@ -26,7 +26,6 @@ runs = 40
 # runs = 3
 
 seed = 17
-
 np.random.seed(seed = seed)
 
 res_detailed = []
@@ -35,10 +34,10 @@ tot_loop = len(dimensions) * len(num_prod_array) * runs
 
 with tqdm(total = tot_loop) as pbar:
     for d in dimensions:
-        _, user_embeddings =  get_user_embeddings_movielens100k(user_dimension = d)
+        user_embeddings = generate_skewed_users(dimension = d, num_users = num_users)
         users = Users(user_embeddings)
         for n_prod in num_prod_array:
-            PEng = ProducersEngagementGame(num_producers=n_prod, users=users, prob = 'linear')
+            PEng = ProducersEngagementGame(num_producers=n_prod, users=users, prob = 'softmax')
             BR_iters = []
             for r in range(runs):
                 converged, last_profile, last_profile_compact, iters = PEng.best_response_dynamics(verbose=False)
@@ -61,6 +60,6 @@ with tqdm(total = tot_loop) as pbar:
             res_aggregate.append(di_aggregate)
 
 df_detailed = pd.DataFrame(res_detailed)
-df_detailed.to_csv('../csv_results/linear_detailed_40runs_movielens_toy.csv', encoding='utf-8', index=False)
+df_detailed.to_csv('../csv_results/softmax_detailed_40runs_weighted_toy.csv', encoding='utf-8', index=False)
 df_aggr = pd.DataFrame(res_aggregate)
-df_aggr.to_csv('../csv_results/linear_aggr_40runs_movielens_toy.csv', encoding='utf-8', index=False)
+df_aggr.to_csv('../csv_results/softmax_aggr_40runs_weighted_toy.csv', encoding='utf-8', index=False)
