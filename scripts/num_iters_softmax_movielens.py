@@ -27,14 +27,13 @@ runs = 40
 
 seed = 17
 
-np.random.seed(seed = seed)
-
 res_detailed = []
 res_aggregate = []
 tot_loop = len(dimensions) * len(num_prod_array) * runs
 
 with tqdm(total = tot_loop) as pbar:
     for d in dimensions:
+        np.random.seed(seed = seed)
         _, user_embeddings =  get_user_embeddings_movielens100k(user_dimension = d)
         users = Users(user_embeddings)
         for n_prod in num_prod_array:
@@ -61,6 +60,6 @@ with tqdm(total = tot_loop) as pbar:
             res_aggregate.append(di_aggregate)
 
 df_detailed = pd.DataFrame(res_detailed)
-df_detailed.to_csv('../csv_results/softmax_detailed_40runs_movielens_seed17.csv', encoding='utf-8', index=False)
+df_detailed.to_csv('../csv_results/softmax_detailed_40runs_movielens_seed17v2.csv', encoding='utf-8', index=False)
 df_aggr = pd.DataFrame(res_aggregate)
-df_aggr.to_csv('../csv_results/softmax_aggr_40runs_movielens_seed17.csv', encoding='utf-8', index=False)
+df_aggr.to_csv('../csv_results/softmax_aggr_40runs_movielens_seed17v2.csv', encoding='utf-8', index=False)
