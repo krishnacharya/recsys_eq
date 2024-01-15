@@ -1,6 +1,25 @@
 from Users import * # A basic Users class
 import numpy as np
 
+def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, int, np.ndarray]:
+    '''
+        p_i(c_k) = 1/num_prod, probability of user coming any producer is uniform
+        thus the utility for producer i is 1/num_prod * (\sum_k=1^num users <s_i, c_k>)
+        it is best for each prodcuer to play cordinate maximizer of \sum_k=1^numuser c_k
+
+        user_array is shape N_users x dimension
+
+        Note all producers utilities and best index will be the same
+        returns 
+        engagement utility for each producer (same), 
+        best start index (in 0...d-1 for all the producers),
+        utility for each consumer k will just be 1/Nprod \sum_n=1^Nprod <c_k, best_strat> = c_k(best_strat index)
+    '''
+    ua_sum = user_array.sum(axis = 0)
+    best_strat_index = np.argmax(ua_sum)
+    max_cord_sum = ua_sum[best_strat_index]
+    return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
+
 def linear_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray)->np.ndarray:
     '''
         content_vector : shape is (dimension,)
