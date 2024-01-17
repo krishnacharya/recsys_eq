@@ -238,8 +238,6 @@ class ProducerLinearExposureGame:
 
         current_util = producer_exposure_utility_linearserving(current_vec, remaining_array, self.users.user_array)
         new_vec, new_util = linear_exposure_concave_maximization()
-        if not np.allclose(new_util, producer_exposure_utility_linearserving(new_vec, remaining_array, self.users.user_array)):
-            print("Big mistake")
         if new_util - current_util < self.epsilon:
             return current_vec, False
         else:
