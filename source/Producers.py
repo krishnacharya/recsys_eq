@@ -202,7 +202,7 @@ class ProducerLinearExposureGame:
         self.BR_dyna_epsNE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
         self.epsilon = epsilon # the stopping criteria, if no producer can improve their utility by epsilon, stop
 
-    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> tuple(np.array, bool):
+    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> tuple[np.array, bool]:
         '''
             Best response for a producer, when all the other producers are frozen to remaining_array
             Parameters:
@@ -219,7 +219,7 @@ class ProducerLinearExposureGame:
             objective = cp.harmonic_mean(cp.hstack((1, x/a))) / 2
             return objective
 
-        def linear_exposure_concave_maximization() -> tuple(np.ndarray, float):
+        def linear_exposure_concave_maximization() -> tuple[np.ndarray, float]:
             '''
                 Returns:
                     The maximizer, value at the maximum
@@ -238,12 +238,14 @@ class ProducerLinearExposureGame:
 
         current_util = producer_exposure_utility_linearserving(current_vec, remaining_array, self.users.user_array)
         new_vec, new_util = linear_exposure_concave_maximization()
+        if not np.allclose(new_util, producer_exposure_utility_linearserving(new_vec, remaining_array, self.users.user_array)):
+            print("Big mistake")
         if new_util - current_util < self.epsilon:
             return current_vec, False
         else:
             return new_vec, True
 
-    def find_update_best_response(self, producers: np.ndarray) -> tuple(np.array, bool):
+    def find_update_best_response(self, producers: np.ndarray) -> tuple[np.array, bool]:
         '''
             producers: has shape (N_producers, dimension)
             Returns
@@ -265,7 +267,7 @@ class ProducerLinearExposureGame:
                 return producers, False
         return producers, True
 
-    def best_response_dynamics(self, max_iter = 100, verbose = False) -> tuple(bool, np.array,):
+    def best_response_dynamics(self, max_iter = 100, verbose = False) -> tuple[bool, np.array, np.array, int]:
         '''
             Single run of best response dynamics starting from random +ve basis vectors for each producer
             Once we hit a epsilon Nash Equilibrium/or max_iterations stop
