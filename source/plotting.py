@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 def user_producer_2bar_plot(pd, ud, filedestname:str): #producer distribution and user distribution
-    #TODO add savefig too
     dim = len(pd)
     y_max = max(max(ud), max(pd))
 
@@ -25,7 +24,6 @@ def user_producer_2bar_plot(pd, ud, filedestname:str): #producer distribution an
     plt.savefig(filedestname, bbox_inches='tight')
 
 def user_producer_2bar_plot_display(pd, ud): #producer distribution and user distribution
-    #TODO add savefig too
     dim = len(pd)
     y_max = max(max(ud), max(pd))
 

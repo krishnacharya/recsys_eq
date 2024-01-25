@@ -49,7 +49,7 @@ def get_user_embeddings_movielens100k(user_dimension):
 
 def user_embeddings_movielens100k_nmf(dimension):
   '''
-    Uses parameters from Krauth
+    Uses parameters from Hron et al
     Returns tuple 
     User embeddings, and L1 normalized user embeddings
   '''
