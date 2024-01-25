@@ -16,4 +16,4 @@ Organization:
 - The pandas Dataframes for each of the 400 instances (of seed x dimensions x producers) for all the experiments are available in the `saved_frames` folder.
 - All the figures in the paper are in the `plots` folder.
 
-Conda environment:
+Conda environment is available in `recsys_eq.yml`
