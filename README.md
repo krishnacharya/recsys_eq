@@ -12,7 +12,7 @@ Organization:
 - The `ProducersEngagementGame` in `Producers.py` instanciates an Engagement Game and requires the number of producers, the content serving rule (softmax or linear),  and a `user` object(see `Users.py`).
 - The workflow involves creating an ProducersEngagementGame object, then calling `best_response_dynamics` on it, all the scripts in the `scripts` directory follow this workflow.
 - We use the following values for the random seeds = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29], dimension of embeddings = [5, 10, 15, 20] and the number of producers = np.arange(10, 110, 10).
-- The results for number of iterations till Nash equilibrium and utilities at NE are available in the folders `csv_results/br_dynamics` and `csv_results/utility-tables` respectively.
+- The results for the number of iterations till convergence to Nash equilibrium and utilities at NE are available in the folders `csv_results/br_dynamics` and `csv_results/utility-tables` respectively.
 - The pandas Dataframes for each of the 400 instances (of seed x dimensions x producers) for all the experiments are available in the `saved_frames` folder.
 - All the figures in the paper are in the `plots` folder.
 
