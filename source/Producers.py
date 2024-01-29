@@ -77,8 +77,8 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
             Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
         Returns 
             dir_producers direction of basis vector for each producer, shape (N_producers, )
-            engagement utility for each producer, shape (N_producers, )
-            engagement utility for each user, shape (N_users, )
+            *engagement* utility for each producer, shape (N_producers, )
+            *engagement* utility for each user, shape (N_users, )
     '''
     prodt = producers.T  # shape (dimension, N_prod)
     dir_producers = np.argmax(prodt, axis=0)
@@ -93,6 +93,24 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
         raise NotImplementedError
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
     return dir_producers, utility.sum(axis=0), utility.sum(axis = 1)
+
+def get_softmax_prodexposure_usereng_utilities(producers:np.ndarray, user_array:np.ndarray):
+    '''
+        producers: shape N_producers x dimension
+        user_array: shape N_users x dimension
+            Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
+        Returns 
+            dir_producers direction of basis vector for each producer, shape (N_producers, )
+            *exposure* utility for each producer, shape (N_producers, ) Row i is \sum_k=1^nusers softmaxprob(c_k to s_i)
+            *engagement* utility for each user, shape (N_users, ), Row k is \sum_j=1^{nprod}  softmaxprob(c_k to s_j) * <c_k, s_j>
+    '''
+    prodt = producers.T  # shape (dimension, N_prod)
+    dir_producers = np.argmax(prodt, axis=0)
+    ratings = user_array @ prodt # shape (N_user, N_prod) ratings ij has what user i rates producer j's content <c_i, s_j>
+    exp_ratings = np.exp(ratings)
+    prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
+    eng_utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
+    return dir_producers, prob.sum(axis=0), eng_utility.sum(axis = 1)
 
 class ProducersEngagementGame:
     '''
