@@ -198,7 +198,7 @@ class ProducersEngagementGame:
         return self.BruteForce_NE
 
 class ProducerSoftmaxExposureGame:
-    def __init__(self, num_producers:int, users:Users, epsilon = 1e-2):
+    def __init__(self, num_producers:int, users:Users):
         self.num_producers = num_producers
         self.dimension = users.dimension
         self.users = users
