@@ -59,11 +59,16 @@ def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:n
 def producer_exposure_utility_linearserving(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray) -> float:
     '''
         Get the exposure utility for content_vector producer assuming rest producers are frozen to remaning array
-        Used for exposure game class
+        Used for producer linear exposure game class
     '''
-    product = user_array @ np.vstack((remaining_array, content_vector)).T # has shape N_user x N_prod, product_ij stores what user i rates producer j
-    prob =  product / product.sum(axis=1)[:,None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
-    return np.sum(prob[:, -1]) # sum across all users of exposure for producer with content vector
+    return np.sum(linear_probability(content_vector, remaining_array, user_array))
+
+def producer_exposure_utility_softmaxserving(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray) -> float:
+    '''        
+        Get the exposure utility for content_vector producer assuming rest producers are frozen to remaning array
+        Used for producer softmax exposure game class
+    '''
+    return np.sum(softmax_probability(content_vector, remaining_array, user_array))
 
 def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear'):
     '''
@@ -191,3 +196,166 @@ class ProducersEngagementGame:
             if is_NE:
                 self.BruteForce_NE.add(tuple(np.sum(producers, axis = 0))) # adds producer profile, # of producers in each direction to set of NE
         return self.BruteForce_NE
+
+class ProducerSoftmaxExposureGame:
+    def __init__(self, num_producers:int, users:Users, epsilon = 1e-2):
+        self.num_producers = num_producers
+        self.dimension = users.dimension
+        self.users = users
+        self.BR_dyna_NE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
+
+    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> tuple[np.array, bool]:
+        '''
+            Best response for a producer, when all the other producers are frozen to remaining_array
+            Parameters:
+                current_vec is a numpy array shape (dimension, )
+                remaining_array is a numpy array of shape (N_producers - 1, dimension)
+            Returns
+                best_row is a numpy array of shape (d,), 
+                searching amongst positive basis vectors is sufficient 
+                due to properties of softmax exposure utility, when nprod >= 6
+        '''
+        max_util = producer_exposure_utility_softmaxserving(current_vec, remaining_array, self.users.user_array) # setting max_util and best_row as what the current vector gives
+        best_row = current_vec 
+        for row in np.eye(self.dimension):
+            util = producer_exposure_utility_softmaxserving(row, remaining_array, self.users.user_array)
+            if util > max_util:
+                best_row = row
+                max_util = util
+        return best_row
+
+    def find_update_best_response(self, producers: np.ndarray):
+        '''
+            producers: has shape (N_producers, dimension)
+            Returns
+                (producers, True) if the input itself is a Nash Equilibrium i.e. each producer is best responding
+                
+                (producers updated, False) if the input is not a Nash equilibrium
+                producers updated differes from producers in exactly one row! 
+                the row in which we find 'a' best response.
+            Note: We search amongst indices randomly
+        '''
+        for i in np.random.permutation(self.num_producers): # random permutation of arange(self.num_producers)
+            br = self.get_best_response(producers[i], producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array
+            if not np.all(producers[i] == br): # found a best response, update and return
+                producers[i] = br
+                return producers, False
+        return producers, True
+
+    def best_response_dynamics(self, max_iter = 1000, verbose = False) -> tuple[bool, np.array, np.array, int]:
+        '''
+            Single run of best response dynamics starting from random +ve basis vectors for each producer
+            Once we hit a Nash Equilibrium/or max_iterations stop
+            Returns 
+            (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done) 
+            converged is True if NE found, False if not
+            last_profile is the of shape (N_producers, dimension)
+            last_profile compact is the # of users along each basis vector shape (dimensions,) 
+            
+            if BR dynamics have converged then last_profile will be a NE!
+        '''
+        producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
+        if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
+        for i in range(max_iter):
+            producers, converged = self.find_update_best_response(producers)
+            if verbose: print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
+            if converged:
+                if verbose: print(f'Number of iterations to coverge: {i}')
+                self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
+                return converged, producers, np.sum(producers, axis=0), i
+        return converged, producers, np.sum(producers, axis=0), i # if BR dynamics do not converge, i here will be equal to max_iterss
+
+    
+class ProducerLinearExposureGame:
+    def __init__(self, num_producers:int, users:Users, epsilon = 1e-2):
+        self.num_producers = num_producers
+        self.dimension = users.dimension
+        self.users = users
+        self.BR_dyna_epsNE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
+        self.epsilon = epsilon # the stopping criteria, if no producer can improve their utility by epsilon, stop
+
+    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> tuple[np.array, bool]:
+        '''
+            Best response for a producer, when all the other producers are frozen to remaining_array
+            Parameters:
+                current_vec is a numpy array shape (dimension, )
+                remaining_array is a numpy array of shape (N_producers - 1, dimension)
+            Returns
+                best response, is_better
+
+                is_better is true if the best responses utility is atleast epsilon greater than current utility
+                else false
+        '''
+        def get_linear_frac(x, a):
+            # returns cvxpy concave objective of x / x + a
+            objective = cp.harmonic_mean(cp.hstack((1, x/a))) / 2
+            return objective
+
+        def linear_exposure_concave_maximization() -> tuple[np.ndarray, float]:
+            '''
+                Returns:
+                    The maximizer, value at the maximum
+            '''
+            s = cp.Variable(self.dimension) # producer i's strategy
+            U = self.users.user_array # shape num users x dimension
+            constraints = [s >= 0, s <= 1, cp.sum(s) <= 1] # L1 ball in the positive orthant
+            OP_sum = (U @ remaining_array.T).sum(axis=1) # other producers sum
+            z = U @ s
+            obj = 0
+            for k in range(self.users.num_users):
+                obj = obj + get_linear_frac(z[k], OP_sum[k])
+            problem = cp.Problem(cp.Maximize(obj), constraints)
+            result = problem.solve()
+            return s.value, result
+
+        current_util = producer_exposure_utility_linearserving(current_vec, remaining_array, self.users.user_array)
+        new_vec, new_util = linear_exposure_concave_maximization()
+        if new_util - current_util < self.epsilon:
+            return current_vec, False
+        else:
+            return new_vec, True
+
+    def find_update_best_response(self, producers: np.ndarray) -> tuple[np.array, bool]:
+        '''
+            producers: has shape (N_producers, dimension)
+            Returns
+                (producers, True) if the input itself is a Nash Equilibrium i.e. each producer is best responding
+                
+                (producers updated, False) if the input is not a Nash equilibrium
+                producers updated differes from producers in exactly one row! 
+                the row in which we find 'a' best response.
+            Note: We search amongst indices randomly
+
+            Returns
+            The updated producer array
+            converged: True if we are at an epsilon-NE
+        '''
+        for i in np.random.permutation(self.num_producers): # random permutation of arange(self.num_producers)
+            br, is_better = self.get_best_response(producers[i], producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array 
+            if is_better: # is better is true if the br utility is atleast epsilon bigger than current utility for producer i
+                producers[i] = br
+                return producers, False
+        return producers, True
+
+    def best_response_dynamics(self, max_iter = 100, verbose = False) -> tuple[bool, np.array, np.array, int]:
+        '''
+            Single run of best response dynamics starting from random +ve basis vectors for each producer
+            Once we hit a epsilon Nash Equilibrium/or max_iterations stop
+            Returns 
+            (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done) 
+            converged is True if NE found, False if not
+            last_profile is the of shape (N_producers, dimension)
+            last_profile compact is the # of users along each basis vector shape (dimensions,) 
+            
+            if BR dynamics have converged then last_profile will be a epsilon NE!
+        '''
+        producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
+        if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
+        for i in range(max_iter):
+            producers, converged = self.find_update_best_response(producers)
+            if verbose: print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
+            if converged:
+                if verbose: print(f'Number of iterations to coverge to eps NE: {i}')
+                self.BR_dyna_epsNE.add(tuple(np.sum(producers, axis=0)))
+                return converged, producers, np.sum(producers, axis=0), i
+        return converged, producers, np.sum(producers, axis=0), i # if BR dynamics do not converge
