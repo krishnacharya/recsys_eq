@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from Users import Users
-from Producers import ProducersEngagementGame
+from Producers import *
 from embeddings import *
 from sklearn.preprocessing import normalize
 from surprise import NMF
