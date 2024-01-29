@@ -56,7 +56,7 @@ with tqdm(total = tot_loop) as pbar:
                             "num_prod": n_prod,
                             "mean_iter_to_NE": np.mean(BR_iters),
                             "std_iters_to_NE": np.std(BR_iters),
-                            "number_of_uniqueNE": len(PEng.BR_dyna_NE)
+                            "number_of_uniqueNE": len(Psmexp.BR_dyna_NE)
                             }
             res_aggregate.append(di_aggregate)
 
