@@ -79,16 +79,21 @@ def plot_4dim_numiter_errbar(df_agg, filename): # best response mean number of i
   plt.ylabel("Iterations to NE")
   plt.savefig(filename, bbox_inches='tight')
 
-def plot_and_save(dims, df_linear:pd.DataFrame, df_softmax:pd.DataFrame, name:str, nprod = 100, seed=17): # representative plots for ud and pd
+def plot_and_save(dims, df_linear:pd.DataFrame, df_softmax:pd.DataFrame, df_greedy:pd.DataFrame, name:str, nprod = 100, seed=17): # representative plots for ud and pd
     distributions = ['user_dist', 'producer_dist']
     for d in dims:
         df_linear_temp = df_linear[(df_linear['seed'] ==  seed) & (df_linear['dimension'] ==  d) & \
                          (df_linear['nprod'] == nprod)][distributions]
         df_softmax_temp = df_softmax[(df_softmax['seed'] ==  seed) & (df_softmax['dimension'] ==  d)\
                            & (df_softmax['nprod'] == nprod)][distributions]
+        df_greedy_temp = df_greedy[(df_greedy['seed'] ==  seed) & (df_greedy['dimension'] ==  d)\
+                           & (df_greedy['nprod'] == nprod)][distributions]
+
 
         ud_linear, pd_linear = df_linear_temp['user_dist'].item(), df_linear_temp['producer_dist'].item()
         ud_softmax, pd_softmax = df_softmax_temp['user_dist'].item(), df_softmax_temp['producer_dist'].item()
+        ud_greedy, pd_greedy = df_greedy_temp['user_dist'].item(), df_greedy_temp['producer_dist'].item()
 
         user_producer_2bar_plot(pd_linear, ud_linear, f'../plots/udpd/{name}_linear_dim{d}_{nprod}prod.pdf')
         user_producer_2bar_plot(pd_softmax, ud_softmax, f'../plots/udpd/{name}_softmax_dim{d}_{nprod}prod.pdf')
+        user_producer_2bar_plot(pd_greedy, ud_greedy, f'../plots/udpd/{name}_greedy_dim{d}_{nprod}prod.pdf')
