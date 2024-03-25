@@ -27,7 +27,7 @@ with tqdm(total = tot) as pbar:
         for seed in seeds:
             np.random.seed(seed = seed) # set the random seed for reproducible NMF
             nue = generate_skewed_users(dimension = d, num_users = n_users)
-            user_dist = nue.sum(axis = 0) / nue.sum() # denominator is actually 943, total number of users, since L1 row norm is 1
+            user_dist = nue.sum(axis = 0) / nue.sum()
             for nprod in n_prodarr:
                 di = {'dimension': d,
                       'seed': seed,
