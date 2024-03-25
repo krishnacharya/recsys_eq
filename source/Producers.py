@@ -43,6 +43,7 @@ def softmax_probability(content_vector:np.ndarray, remaining_array:np.ndarray, u
     '''
     product = np.exp((user_array @ np.vstack((remaining_array, content_vector)).T) / temp) # has shape N_user x N_prod, # TODO temperature added
     prob = product / product.sum(axis=1)[:, None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
+    # print("calling sotfmax_probability", np.array_str(prob, precision=3, suppress_small=True))
     return prob[:, -1]
 
 def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:np.ndarray) -> float:
@@ -72,6 +73,8 @@ def producer_exposure_utility_linearserving(content_vector:np.ndarray, remaining
 
 def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
     '''
+        Given the producer strategies and user array return the (engagement) utilities for producer and users.
+
         producers: shape N_producers x dimension
         user_array: shape N_users x dimension
             Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
@@ -90,6 +93,7 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     elif prob_type == 'softmax':
         exp_ratings = np.exp(ratings / temp) # TODO temperature added
         prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
+        # print("Get all eng utils", np.array_str(prob, precision=3, suppress_small=True))
     else:
         raise NotImplementedError
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
@@ -154,7 +158,7 @@ class ProducersEngagementGame:
                 return producers, False
         return producers, True
 
-    def best_response_dynamics(self, max_iter = 10000, verbose = False):
+    def best_response_dynamics(self, max_iter = 500, verbose = False):
         '''
             Single run of best response dynamics starting from random +ve basis vectors for each producer
             Once we hit a Nash Equilibrium/or max_iterations stop
