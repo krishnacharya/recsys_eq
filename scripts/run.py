@@ -19,7 +19,7 @@ def run_producer_game(dimensions:list, seeds:list, n_prodarr:list, Embedding:Emb
     '''
     tot = len(dimensions) * len(seeds) * len(n_prodarr)
     res = []
-    with tqdm(total = tot) as pbar:
+    with tqdm(total = tot, mininterval = 600) as pbar:
         for d in dimensions:
             for seed in seeds:
                 # np.random.seed(seed = seed) # set the random seed for reproducible NMF
