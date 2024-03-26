@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--nusers', type = int, default = 10000, help = 'number of users, used in synthetic data generation')
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
-    parser.add_argument('--temperature', type = int, default = 1.0, help = 'Temperature parameter')
+    parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter')
     parser.add_argument('--save_dir', type = str, default = '../saved_frames/', help= 'directory in which to store the generated dataframe for utility, NE')
     args = parser.parse_args()
 
@@ -26,9 +26,11 @@ def main():
     elif args.data == 'movielens-100k':
         Embedding = Movielens_100k_Embedding
     else:
+        # print("Dataset not defined")
         raise NotImplementedError
     
     if args.prob not in ['linear', 'softmax']:
+        # print("Probability not defined")
         raise NotImplementedError
     
     save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}.pkl'
