@@ -1,5 +1,6 @@
 import yaml
 import numpy as np
+# GENERATES common configs used by all our experiments
 # The common configs for all the experiments are seeds, dimensions and num producer array, 
 # type of probability (softamx, linear), temperature, dataset, num of users are experiment specific inputs
 di = {}
@@ -10,8 +11,11 @@ di['n_prodarr'] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] # number of producer
 
 toy = {} # for workflow sanity check
 toy['seeds'] = [2, 11, 13]
-dimension = [5, 10]
-n_prodarr = [10, 20]
+toy['dimensions'] = [5, 10]
+toy['n_prodarr'] = [10, 20]
 
 with open('common_config.yml', 'w') as outfile:
     yaml.dump(di, outfile, default_flow_style=False, sort_keys=False)
+
+with open('toy_config.yml', 'w') as outfile:
+    yaml.dump(toy, outfile, default_flow_style=False, sort_keys=False)

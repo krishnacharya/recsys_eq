@@ -15,9 +15,9 @@ dimension = [5, 10, 15, 20] # number of dimensions for latent/embedding
 n_prodarr = np.arange(10, 110, 10) # [10, 20...100] Producers
 n_users = 10000
 # TEST
-# seeds = [2, 11, 13]
-# dimension = [5, 10] # number of dimensions for latent/embedding
-# n_prodarr = [10, 20]
+seeds = [2, 11, 13]
+dimension = [5, 10] # number of dimensions for latent/embedding
+n_prodarr = [10, 20]
 
 tot = len(dimension) * len(seeds) * len(n_prodarr)
 res = []
@@ -67,4 +67,4 @@ with tqdm(total = tot) as pbar:
                 pbar.update(1)
                 res.append(di)
 df = pd.DataFrame(res)
-df.to_pickle('../saved_frames/weighted_synthetic_grid_softmax_statistics.pkl')
+df.to_pickle('../saved_frames/weighted_synth_check_toy.pkl')

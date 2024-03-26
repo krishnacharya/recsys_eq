@@ -3,7 +3,7 @@ sys.path.append('../source/')
 import argparse
 from utils import load_config
 from Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
-
+from run import *
 
 DATA_SOURCE = ['synth_uniform', 'synth_skewed', 'real_movielens-100k']
 
@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
     parser.add_argument('--temperature', type = int, default = 1.0, help = 'Temperature parameter')
-    parser.add_argument('--save_dir', type = str, default = './saved_frames/', help= 'directory in which to store the generated dataframe for utility, NE')
+    parser.add_argument('--save_dir', type = str, default = '../saved_frames/', help= 'directory in which to store the generated dataframe for utility, NE')
     args = parser.parse_args()
 
     common_config = load_config('../configs/'+str(args.common_config)+'.yml') # dictionary with common seeds, dimension, nprods
@@ -40,10 +40,8 @@ def main():
     # print(emb_obj.nue.sum(axis=1))
     # print(emb_obj.nue.shape, emb_obj.num_users)
     # print(args.nusers, args.prob)
-    # run_producer_game(common_config['dimensions'], common_config['seeds'], common_config['n_prodarr'], \
-    #                 Embedding, args.prob, args.temperature, args.num_users, final_location)
-    # run_producer_game()
-    
-    
+    run_producer_game(common_config['dimensions'], common_config['seeds'], common_config['n_prodarr'], \
+                    Embedding, args.prob, args.temperature, args.nusers, final_location)
+
 if __name__ == '__main__':
     main()
