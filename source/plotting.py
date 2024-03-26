@@ -104,4 +104,4 @@ def plot_and_save_singledf(dims:list, df:pd.DataFrame, name:str, nprod = 100, se
   for d in dims:
     df_temp = df[(df['seed'] ==  seed) & (df['dimension'] ==  d) & (df['nprod'] == nprod)][distributions]
     ud_softmax, pd_softmax = df_temp['user_dist'].item(), df_temp['producer_dist'].item()
-    user_producer_2bar_plot(pd_softmax, ud_softmax, f'../plots/udpd/{name}.pdf')
+    user_producer_2bar_plot(pd_softmax, ud_softmax, f'../plots/udpd/{name}_dim_{d}.pdf')
