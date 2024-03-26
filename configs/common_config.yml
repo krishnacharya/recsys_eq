@@ -9,7 +9,7 @@ seeds:
 - 19
 - 23
 - 29
-dimension:
+dimensions:
 - 5
 - 10
 - 15

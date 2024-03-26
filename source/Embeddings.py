@@ -4,15 +4,7 @@ from surprise import Dataset
 from surprise.model_selection import cross_validate
 from sklearn.preprocessing import normalize
 import numpy as np
-
-# class Embedding(ABC):
-#     @abstractmethod
-#     def set_seed(self, seed):
-#         '''
-#             set seed for any randomness used in generating the embedding
-#         '''
-#         pass
-# MAKE THIS ABSTRACT CLASS later
+from abc import ABC, abstractmethod
 
 def generate_uniform_user(dimension) -> np.array:
     '''
@@ -31,14 +23,18 @@ def generate_uniform_users(dimension, num_users = 10000) -> np.array:
   return np.array([generate_uniform_user(dimension=dimension) for _ in range(num_users)])
 
 
-class Synth_Uniform_Embedding:
+class Embedding(ABC):
+    def __init__(self, seed, dimension, num_users):
+        pass
+
+class Synth_Uniform_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users):
         np.random.seed(seed = seed) # set seed for randomness
         self.nue = generate_uniform_users(dimension = dimension, num_users = num_users) # already L1 normalized, rows sum to 1
         self.dimension = dimension
         self.num_users = num_users
     
-class Synth_Skewed_Embedding:
+class Synth_Skewed_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users):
         np.random.seed(seed = seed) # set seed for randomness
         self.nue = self.generate_skewed_users(dimension = dimension, num_users = num_users) # nue must be L1 normalized to 1
@@ -54,12 +50,12 @@ class Synth_Skewed_Embedding:
         ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
         return normalize(ue * weights, norm = "l1")
 
-class Movielens_100k_Embedding:
+class Movielens_100k_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
         np.random.seed(seed = seed) # set seed for randomness in NMF factorization
         _, self.nue = self.get_user_embeddings_movielens100k(dimension) # normalized user embeddings
         self.dimension = dimension
-        self.num_users = self.nue.shape[0] # check if num users here = 948 for movielens 100k
+        self.num_users = self.nue.shape[0]
     
     def get_user_embeddings_movielens100k(self, dimension):
         '''

@@ -2,30 +2,37 @@ import sys
 sys.path.append('../source/')
 from tqdm import tqdm
 import pandas as pd
+from Users import Users
 from Producers import *
+from Embeddings import *
 
-
-# TODO add Embedding abstract class
-def run_producer_game(dimension:list, seeds:list, n_prodarr:list, Embedding, save_file_name:str, n_users = -1):
+def run_producer_game(dimensions:list, seeds:list, n_prodarr:list, Embedding:Embedding, \
+                    prob:str, temp:float, n_users:int, save_file_name:str):
     '''
-        n_users: used in the synthetic data creation for uniform and weighted
+        dimensions: list of embedding dimensions desired
+        seeds: list of seeds
+        n_prodarr: list of number of producers
+        Embedding: Class name # the Embedding passed to def run_producer_game is actually a class name, we instanciate an object out of it! Embedding could be a Synth_uniform, Synth_skewed, Movielens type etc...
+        prob: softmax, linear
+        temp: temperature, won't be used in linear
+        n_users: number of users
     '''
-    tot = len(dimension) * len(seeds) * len(n_prodarr)
+    tot = len(dimensions) * len(seeds) * len(n_prodarr)
     res = []
     with tqdm(total = tot) as pbar:
-        for d in dimension:
+        for d in dimensions:
             for seed in seeds:
-                # REFACTOR GENERAL DATALOADING HERE, SHOULD WORK FOR MOVIELENS, SYNTHETIC, WEIGHTED, latter two take n_users as parameter
-                # just call get factorization with specific seed
-                np.random.seed(seed = seed) # set the random seed for reproducible NMF
-                _, nue  = get_user_embeddings_movielens100k(user_dimension =  d) # get NMF on movielens of dimension d, normalized user embedding L1 norm = 1
+                # np.random.seed(seed = seed) # set the random seed for reproducible NMF
+                emb_obj = Embedding(seed = seed, dimension = d, num_users = n_users)
+                nue = emb_obj.nue
+                # _, nue  = get_user_embeddings_movielens100k(user_dimension =  d) # get NMF on movielens of dimension d, normalized user embedding L1 norm = 1
                 user_dist = nue.sum(axis = 0) / nue.sum() # denominator is actually 943, total number of users, since L1 row norm is 1
                 for nprod in n_prodarr:
                     di = {'dimension': d,
                         'seed': seed,
                         'nprod': nprod
                         }
-                    PEng = ProducersEngagementGame(num_producers = nprod, users = Users(nue), prob = 'softmax') # CHANGE
+                    PEng = ProducersEngagementGame(num_producers = nprod, users = Users(nue), prob = prob, temp = temp)
                     converged, last_profile, last_profile_compact, iters =  PEng.best_response_dynamics(verbose=False)
                     di['NE_exists'] = converged
                     di['iters'] = iters
@@ -33,7 +40,7 @@ def run_producer_game(dimension:list, seeds:list, n_prodarr:list, Embedding, sav
                     di['producer_dist'] = last_profile_compact / nprod
                     di['user_dist'] = user_dist
                     if converged:
-                        dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type='softmax') # CHANGE
+                        dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp) # CHANGE
                         di.update({
                         'total_prod_util': prod_utils.sum(),
                         'avg_prod_util': prod_utils.mean(),
