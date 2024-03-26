@@ -1,7 +1,11 @@
+import sys
+sys.path.append('../source/')
 from tqdm import tqdm
 import pandas as pd
 from Producers import *
 
+
+# TODO add Embedding abstract class
 def run_producer_game(dimension:list, seeds:list, n_prodarr:list, Embedding, save_file_name:str, n_users = -1):
     '''
         n_users: used in the synthetic data creation for uniform and weighted
