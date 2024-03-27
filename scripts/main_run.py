@@ -33,6 +33,8 @@ def main():
         # print("Probability not defined")
         raise NotImplementedError
     
+    print(f'Temperature is {args.temperature}')
+    
     save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}.pkl'
     final_location = args.save_dir + save_file_name
     # print(final_location)
@@ -42,6 +44,7 @@ def main():
     # print(emb_obj.nue.sum(axis=1))
     # print(emb_obj.nue.shape, emb_obj.num_users)
     # print(args.nusers, args.prob)
+    # print(args.temperature)
     run_producer_game(common_config['dimensions'], common_config['seeds'], common_config['n_prodarr'], \
                     Embedding, args.prob, args.temperature, args.nusers, final_location)
 
