@@ -22,7 +22,7 @@ def run_producer_game(dimensions:list, seeds:list, n_prodarr:list, Embedding:Emb
     with tqdm(total = tot, mininterval = 600) as pbar:
         for d in dimensions:
             for seed in seeds:
-                # np.random.seed(seed = seed) # set the random seed for reproducible NMF
+                # np.random.seed(seed = seed) # set the random seed for reproducible NMF #TODO send cached embeddings?
                 emb_obj = Embedding(seed = seed, dimension = d, num_users = n_users)
                 nue = emb_obj.nue
                 # _, nue  = get_user_embeddings_movielens100k(user_dimension =  d) # get NMF on movielens of dimension d, normalized user embedding L1 norm = 1

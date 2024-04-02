@@ -68,3 +68,22 @@ class Movielens_100k_Embedding(Embedding):
         cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
         normalized_embeddings = normalize(algo.pu,  norm = "l1")
         return algo.pu, normalized_embeddings
+
+class Movielens_1m_Embedding(Embedding):
+    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
+        np.random.seed(seed = seed) # set seed for randomness in NMF factorization
+        _, self.nue = self.get_user_embeddings_movielens1m(dimension) # normalized user embeddings
+        self.dimension = dimension
+        self.num_users = self.nue.shape[0]
+    
+    def get_user_embeddings_movielens1m(self, dimension):
+        '''
+            Gets embeddings for movielens 100k dataset
+            Returns tuple
+            User embeddings, and L1 normalized user embeddings
+        '''
+        data = Dataset.load_builtin("ml-1m")
+        algo = NMF(n_factors=dimension)
+        cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+        normalized_embeddings = normalize(algo.pu,  norm = "l1")
+        return algo.pu, normalized_embeddings
