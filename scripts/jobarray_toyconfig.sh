@@ -3,7 +3,7 @@
 #SBATCH --array=1-3
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=1G
-#SBATCH --time=01:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=./Sbatch-reports/Array_test.%A\_%a.out
 #SBATCH --error=./Sbatch-reports/Array_test.%A\_%a.error
 
