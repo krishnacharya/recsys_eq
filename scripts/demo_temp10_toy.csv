@@ -1,0 +1,3 @@
+synth-uniform,softmax,10,toy_config
+synth-skewed,softmax,10,toy_config 
+movielens-100k,softmax,10,toy_config

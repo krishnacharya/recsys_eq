@@ -35,7 +35,7 @@ def main():
     
     print(f'Temperature is {args.temperature}')
     
-    save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}.pkl'
+    save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}_{args.common_config}.pkl'
     final_location = args.save_dir + save_file_name
     # print(final_location)
     # these 3 are trial runs
