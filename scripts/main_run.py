@@ -5,8 +5,6 @@ from utils import load_config
 from Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
 from run import *
 
-# DATA_SOURCE = ['synth_uniform', 'synth_skewed', 'real_movielens-100k']
-
 def main():
     parser = argparse.ArgumentParser(description='get experiment configs')
     parser.add_argument('--common_config', type=str, default = 'common_config', help='Path to the common config file')
@@ -25,6 +23,10 @@ def main():
         Embedding = Synth_Skewed_Embedding
     elif args.data == 'movielens-100k':
         Embedding = Movielens_100k_Embedding
+    elif args.data == 'rentrunway':
+        Embedding = RentRunway_Embedding
+    elif args.data == 'amznmusic':
+        Embedding = AmazonMusic_Embedding
     else:
         # print("Dataset not defined")
         raise NotImplementedError
@@ -36,7 +38,7 @@ def main():
     print(f'Temperature is {args.temperature}')
     
     save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}_{args.common_config}.pkl'
-    final_location = args.save_dir + save_file_name
+    final_location = args.save_dir + f'{args.data}/'+ save_file_name
     # print(final_location)
     # these 3 are trial runs
     # emb_obj = Embedding(seed = 11, dimension = 6, num_users = 3)

@@ -152,7 +152,6 @@ class ProducersEngagementGame:
                 searching amongst positive basis vectors is sufficient 
                 due to properties of engagement utility
         '''
-        # max_util = -1
         max_util = engagement_utility(current_vec, self.probability_function(current_vec, remaining_array, self.users.user_array, temp = self.temp),  self.users.user_array)
         best_row = current_vec # setting best_row and max utility as what the current vector gives
         for row in np.eye(self.dimension):

@@ -50,6 +50,22 @@ class Synth_Skewed_Embedding(Embedding):
         ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
         return normalize(ue * weights, norm = "l1")
 
+class RentRunway_Embedding(Embedding):
+    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
+        np.random.seed(seed = seed) # set seed for randomness in NMF factorization
+        user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy')
+        self.nue = normalize(user_emb,  norm = "l1")
+        self.dimension = dimension
+        self.num_users = self.nue.shape[0]
+
+class AmazonMusic_Embedding(Embedding):
+    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
+        np.random.seed(seed = seed) # set seed for randomness in NMF factorization
+        user_emb = np.load(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}.npy')
+        self.nue = normalize(user_emb,  norm = "l1")
+        self.dimension = dimension
+        self.num_users = self.nue.shape[0]
+
 class Movielens_100k_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
         np.random.seed(seed = seed) # set seed for randomness in NMF factorization, TODO
