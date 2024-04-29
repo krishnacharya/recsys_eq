@@ -5,7 +5,7 @@ from utils import load_config
 from Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
 from run import *
 
-DATA_SOURCE = ['synth_uniform', 'synth_skewed', 'real_movielens-100k']
+# DATA_SOURCE = ['synth_uniform', 'synth_skewed', 'real_movielens-100k']
 
 def main():
     parser = argparse.ArgumentParser(description='get experiment configs')

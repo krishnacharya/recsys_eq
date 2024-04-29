@@ -52,22 +52,24 @@ class Synth_Skewed_Embedding(Embedding):
 
 class Movielens_100k_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
-        np.random.seed(seed = seed) # set seed for randomness in NMF factorization
-        _, self.nue = self.get_user_embeddings_movielens100k(dimension) # normalized user embeddings
+        np.random.seed(seed = seed) # set seed for randomness in NMF factorization, TODO
+        user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
+        self.nue = normalize(user_emb,  norm = "l1")
+        # _, self.nue = self.get_user_embeddings_movielens100k(dimension) # normalized user embeddings
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
     
-    def get_user_embeddings_movielens100k(self, dimension):
-        '''
-            Gets embeddings for movielens 100k dataset
-            Returns tuple
-            User embeddings, and L1 normalized user embeddings
-        '''
-        data = Dataset.load_builtin("ml-100k")
-        algo = NMF(n_factors=dimension)
-        cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
-        normalized_embeddings = normalize(algo.pu,  norm = "l1")
-        return algo.pu, normalized_embeddings
+    # def get_user_embeddings_movielens100k(self, dimension):
+    #     '''
+    #         Gets embeddings for movielens 100k dataset
+    #         Returns tuple
+    #         User embeddings, and L1 normalized user embeddings
+    #     '''
+    #     data = Dataset.load_builtin("ml-100k")
+    #     algo = NMF(n_factors=dimension)
+    #     cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+    #     normalized_embeddings = normalize(algo.pu,  norm = "l1")
+    #     return algo.pu, normalized_embeddings
 
 class Movielens_1m_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
@@ -76,14 +78,14 @@ class Movielens_1m_Embedding(Embedding):
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
     
-    def get_user_embeddings_movielens1m(self, dimension):
-        '''
-            Gets embeddings for movielens 100k dataset
-            Returns tuple
-            User embeddings, and L1 normalized user embeddings
-        '''
-        data = Dataset.load_builtin("ml-1m")
-        algo = NMF(n_factors=dimension)
-        cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
-        normalized_embeddings = normalize(algo.pu,  norm = "l1")
-        return algo.pu, normalized_embeddings
+    # def get_user_embeddings_movielens1m(self, dimension):
+    #     '''
+    #         Gets embeddings for movielens 100k dataset
+    #         Returns tuple
+    #         User embeddings, and L1 normalized user embeddings
+    #     '''
+    #     data = Dataset.load_builtin("ml-1m")
+    #     algo = NMF(n_factors=dimension)
+    #     cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+    #     normalized_embeddings = normalize(algo.pu,  norm = "l1")
+    #     return algo.pu, normalized_embeddings
