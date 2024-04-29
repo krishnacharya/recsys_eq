@@ -17,4 +17,4 @@ echo "parameters for iteration: ${iteration}"
 dim=$(echo ${iteration} | cut -d "," -f 1)
 seed=$(echo ${iteration} | cut -d "," -f 2)
 
-python maingen_amznmusic.py --dimension ${dim} --seed ${seed}
+python maingen_rentrunway.py --dimension ${dim} --seed ${seed}

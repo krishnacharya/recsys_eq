@@ -37,4 +37,20 @@ def save_amazon_music(dimension, seed) -> None:
     cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
     np.save(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}',algo.pu) #save user embeddings
 
+def save_rentrunway(dimension, seed) -> None:
+    def get_surprise_compatible():
+        df = pd.read_csv('../data/rentrunway_preproc.csv')
+        df = df[['user_id','item_id','rating']] # surprise custom dataset expects this order
+        reader = Reader(rating_scale=(1, 5))
+        data = Dataset.load_from_df(df, reader)
+        return data
+    
+    np.random.seed(seed = seed)
+    data = get_surprise_compatible()
+    algo = NMF(n_factors = dimension)
+    cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+    np.save(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}',algo.pu) #save user embeddings
+
+
+
 # save_movielens100k()
