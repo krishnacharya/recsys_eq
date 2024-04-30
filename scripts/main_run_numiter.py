@@ -3,7 +3,9 @@ sys.path.append('../source/')
 import argparse
 from utils import load_config
 from Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
-from run import *
+from run import run_numiters
+from pathlib import Path
+
 
 def main():
     parser = argparse.ArgumentParser(description='get experiment configs')
@@ -12,7 +14,9 @@ def main():
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
     parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter')
-    parser.add_argument('--save_dir', type = str, default = '../saved_frames/', help= 'directory in which to store the generated dataframe for utility, NE')
+    parser.add_argument('--seed', type = int, default = 13, help = 'Seed for randomness')
+    parser.add_argument('--runnum', type = str, help = 'run number, each run is of BR dynamics for a given dim, number of producers, nusers')
+    parser.add_argument('--save_dir', type = str, default = '../numiters_savedframe/', help= 'directory in which to store the generated dataframe for utility, NE')
     args = parser.parse_args()
 
     common_config = load_config('../configs/'+str(args.common_config)+'.yml') # dictionary with common seeds, dimension, nprods
@@ -34,21 +38,12 @@ def main():
     if args.prob not in ['linear', 'softmax']:
         # print("Probability not defined")
         raise NotImplementedError
-    
     print(f'Temperature is {args.temperature}')
-    
-    save_file_name = f'{args.data}_{args.prob}_temp_{args.temperature}_{args.common_config}.pkl'
-    final_location = args.save_dir + f'{args.data}/'+ save_file_name # TODO change above to save directory? maybe not if we dont go granular
-    # print(final_location)
-    # these 3 are trial runs
-    # emb_obj = Embedding(seed = 11, dimension = 6, num_users = 3)
-    # # print(emb_obj.nue)
-    # print(emb_obj.nue.sum(axis=1))
-    # print(emb_obj.nue.shape, emb_obj.num_users)
-    # print(args.nusers, args.prob)
-    # print(args.temperature)
-    run_producer_game(common_config['dimensions'], common_config['seeds'], common_config['n_prodarr'], \
-                    Embedding, args.prob, args.temperature, args.nusers, final_location)
+
+    final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}'
+    Path(final_dir).mkdir(parents=True, exist_ok=True)
+    final_dest = final_dir + '/run_' + args.runnum + '.pkl'
+    run_numiters(args.runnum, common_config['dimensions'], args.seed, common_config['n_prodarr'], Embedding, args.prob, args.temperature, args.nusers, final_dest)
 
 if __name__ == '__main__':
     main()
