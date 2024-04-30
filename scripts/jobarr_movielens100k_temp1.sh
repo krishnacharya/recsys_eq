@@ -13,9 +13,9 @@ conda activate recsys
 n=$SLURM_ARRAY_TASK_ID
 echo "parameters for iteration: ${iteration}"
 
-data="rentrunway"
+data="movielens-100k"
 prob="softmax"
 temp="1"
-cc="config_less_seeds"
+cc="toy_config"
 
 python main_run_numiter.py --data ${data} --prob ${prob} --temp ${temp} --common_config ${cc} --runnum ${n}
