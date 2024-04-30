@@ -1,5 +1,4 @@
 import glob
-print(glob.glob("/home/adam/*"))
 import argparse
 import pandas as pd
 

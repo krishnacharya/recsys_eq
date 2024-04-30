@@ -78,21 +78,22 @@ def run_producer_game(dimensions:list, seeds:list, n_prodarr:list, Embedding:Emb
 #     di = {'dimension': d,'seed': seed,'nprod': nprod}
 #     TODO later, if each ProducersEngagementGame takes too long to run.
 
-def run_numiters(run:str, dimensions:list, seed:int, n_prodarr:list, Embedding:Embedding,\
- prob:str, temp:float, n_users:int, save_dest:str):
+def run_numiters(run:str, dimensions:list, embedding_seed:int, \
+                n_prodarr:list, Embedding:Embedding, prob:str, temp:float, n_users:int, save_dest:str):
     '''
         Very similar to run_producer_game but run is variable parameter which is from the job array iteration number
-        seed is fixed
+        embedding_seed is used for loading the saved NMF factorization
     '''
+    np.random.seed(seed = int(run)) # seed for experiment run, this is not related to the seed in the NMF embedding generation
     tot = len(dimensions) * len(n_prodarr)
     res = []
     with tqdm(total = tot, mininterval = 600) as pbar:
         for d in dimensions:
-            emb_obj = Embedding(seed = seed, dimension = d, num_users = n_users) #now we use saved embeddings for movielens
+            emb_obj = Embedding(seed = embedding_seed, dimension = d, num_users = n_users) #now we use saved embeddings for movielens
             nue = emb_obj.nue
             user_dist = nue.sum(axis = 0) / nue.sum() # denominator will have the number of numbers, since each row is L1 normalized
             for nprod in n_prodarr:
-                di = {'dimension': d, 'nprod': nprod, 'run': run, 'seed':seed}
+                di = {'dimension': d, 'nprod': nprod, 'run': run, 'emb_seed':embedding_seed}
                 PEng = ProducersEngagementGame(num_producers = nprod, users = Users(nue), prob = prob, temp = temp)
                 converged, last_profile, last_profile_compact, iters =  PEng.best_response_dynamics(verbose=False)
                 di['NE_exists'] = converged
@@ -127,5 +128,5 @@ def run_numiters(run:str, dimensions:list, seed:int, n_prodarr:list, Embedding:E
                     })
                 pbar.update(1)
                 res.append(di)
-    df = pd.DataFrame(res) #TODO, save file name, run 1 to 40
+    df = pd.DataFrame(res)
     df.to_pickle(save_dest)

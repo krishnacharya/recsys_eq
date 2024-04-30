@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH -J jobarray_demo
+#SBATCH -J amzn_music_numiters
 #SBATCH --array=1-40
 #SBATCH -A gts-jziani3
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=10G
 #SBATCH --time=24:00:00
 #SBATCH --output=./Sbatch-reports/Array_test.%A\_%a.out
 #SBATCH --error=./Sbatch-reports/Array_test.%A\_%a.error
@@ -13,7 +13,7 @@ conda activate recsys
 n=$SLURM_ARRAY_TASK_ID
 echo "parameters for iteration: ${iteration}"
 
-data="movielens-100k"
+data="amznmusic"
 prob="softmax"
 temp="1"
 cc="config_less_seeds"
