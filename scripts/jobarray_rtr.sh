@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J jobarray_demo
+#SBATCH -J rentrunway-utils-embseeds
 #SBATCH --array=1-2
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G

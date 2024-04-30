@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J jobarray_demo
+#SBATCH -J movielens100k-concat
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
