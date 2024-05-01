@@ -17,6 +17,7 @@ def run_producer_game(dimensions:list, seeds:list, n_prodarr:list, Embedding:Emb
         temp: temperature, won't be used in linear
         n_users: number of users
     '''
+    #TODO change seeds to emb_seeds, also keep common global seed for experiment
     tot = len(dimensions) * len(seeds) * len(n_prodarr)
     res = []
     with tqdm(total = tot, mininterval = 600) as pbar:

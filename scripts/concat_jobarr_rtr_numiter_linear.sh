@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J rtr
+#SBATCH -J jobarray_demo
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
@@ -12,7 +12,7 @@ conda activate recsys
 echo "parameters for iteration: ${iteration}"
 
 data="rentrunway"
-prob="softmax"
+prob="linear"
 temp="1"
 
 python concat_runframes.py --data ${data} --prob ${prob} --temp ${temp}
