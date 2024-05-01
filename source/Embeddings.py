@@ -29,30 +29,29 @@ class Embedding(ABC):
 
 class Synth_Uniform_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users):
-        np.random.seed(seed = seed) # set seed for randomness
-        self.nue = generate_uniform_users(dimension = dimension, num_users = num_users) # already L1 normalized, rows sum to 1
         self.dimension = dimension
         self.num_users = num_users
+        self.nue = np.load(f'../saved_embeddings/synthuniform/dim{dimension}_seed{seed}.npy') # normalized user embedding
     
 class Synth_Skewed_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users):
-        np.random.seed(seed = seed) # set seed for randomness
-        self.nue = self.generate_skewed_users(dimension = dimension, num_users = num_users) # nue must be L1 normalized to 1
         self.dimension = dimension
         self.num_users = num_users
-    
-    def generate_skewed_users(self, dimension, num_users = 10000) -> np.array:
-        '''
-            Get a numpy array of shape num_users x dimension
-            with each row representing a user on the proability simplex, i.e.\sum_j x_ij = 1
-        '''
-        weights = np.sort(generate_uniform_user(dimension)) # shape d, from the probbability simplex
-        ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
-        return normalize(ue * weights, norm = "l1")
+        user_emb = np.load(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}.npy')
+        self.nue = normalize(user_emb,  norm = "l1") # normalized user embedding
+
+    # def generate_skewed_users(self, dimension, num_users = 10000) -> np.array:
+    #     '''
+    #         Get a numpy array of shape num_users x dimension
+    #         with each row representing a user on the proability simplex, i.e.\sum_j x_ij = 1
+    #         Deprecated, used to return L1 normalized embedding of weighted
+    #     '''
+    #     weights = np.sort(generate_uniform_user(dimension)) # shape d, from the probbability simplex
+    #     ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
+    #     return normalize(ue * weights, norm = "l1")
 
 class RentRunway_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
-        # np.random.seed(seed = seed) # set seed for randomness in NMF factorization
         user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
         self.dimension = dimension
@@ -60,7 +59,6 @@ class RentRunway_Embedding(Embedding):
 
 class AmazonMusic_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
-        # np.random.seed(seed = seed) # set seed for randomness in NMF factorization
         user_emb = np.load(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
         self.dimension = dimension
@@ -68,7 +66,6 @@ class AmazonMusic_Embedding(Embedding):
 
 class Movielens_100k_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
-        # np.random.seed(seed = seed) # set seed for randomness in NMF factorization, TODO
         user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
         # _, self.nue = self.get_user_embeddings_movielens100k(dimension) # normalized user embeddings
@@ -89,7 +86,7 @@ class Movielens_100k_Embedding(Embedding):
 
 class Movielens_1m_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
-        np.random.seed(seed = seed) # set seed for randomness in NMF factorization
+        np.random.seed(seed = seed) # set seed for randomness in NMF factorization TODO deprecated
         _, self.nue = self.get_user_embeddings_movielens1m(dimension) # normalized user embeddings
         self.dimension = dimension
         self.num_users = self.nue.shape[0]

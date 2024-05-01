@@ -1,0 +1,14 @@
+from SaveEmbeddings import *
+import argparse
+
+# save embeddings for both synth uniform and skewed
+def main():
+    parser = argparse.ArgumentParser(description='get experiment configs')
+    parser.add_argument('--dimension', type = int, help = 'dimension of factorization')
+    parser.add_argument('--seed', type = int, help='random seed to set')
+    args = parser.parse_args()
+    save_synth_uniform(dimension = args.dimension, seed=args.seed)
+    save_synth_skewed(dimension = args.dimension, seed=args.seed)
+
+if __name__ == '__main__':
+    main()
