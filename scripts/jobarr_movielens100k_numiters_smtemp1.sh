@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J movielens-100k-numiter
+#SBATCH -J ml-numiter
 #SBATCH --array=1-40
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
-#SBATCH --output=./Sbatch-reports/Array_test.%A\_%a.out
-#SBATCH --error=./Sbatch-reports/Array_test.%A\_%a.error
+#SBATCH --output=./Sbatch-reports/mlnumiter.%A\_%a.out
+#SBATCH --error=./Sbatch-reports/mlnumiter.%A\_%a.error
 
 module load anaconda3/2022.05.0.1
 conda activate recsys
