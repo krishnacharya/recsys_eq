@@ -45,9 +45,126 @@ def user_producer_2bar_plot_display(pd, ud): #producer distribution and user dis
     plt.show()
   
 
+def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest:str, dim = 15):
+  '''
+    producer and user utility averaged across seeds
+    One curve each for producers in nprodlist e.g. 2, 10, 50, 100 producers
+    x axis has temperature, y axis has avg utility
+
+    dict_df: dictionarty of dataframs keys temperature 0.01, 0.1, 1, 10, 100, linear
+    nprodlist: list of ints, expecting 4 different total number of producers e.g [2, 10, 50, 100]
+
+    2 plots one for producer utility, one for user utility saved in filedest
+  '''
+  def df_agg_utils(df, temp:int):
+    '''
+      average across seeds
+
+      Returns 
+      df_agg has columns: dimension, nprod, avg_prod_util_mean, avg_prod_util_std, avg_user_util_mean, avg_user_util_std
+    '''
+    groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
+    cols = groups + ['avg_prod_util', 'avg_user_util']
+    df = df[df['NE_exists'] == True][cols]
+    df_agg = df.groupby(groups).agg([np.mean, np.std]) # iters_to_NE will get mean, std; we group by dimensions, num_prod
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and std
+    df_agg.reset_index(inplace=True)
+    df_agg['temp'] = temp # add a column for temperatur
+    return df_agg
+
+  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # concatenate across tempeartures
+  nprod_dict_avg_produtility = {} # this is used for plotting
+  nprod_dict_avg_userutility = {}
+  for nprod in nprodlist:
+    df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
+    df.sort_values(by = 'temp', inplace = True)
+    nprod_dict_avg_produtility[nprod] = {'x': df['temp'], 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_std']}
+    nprod_dict_avg_userutility[nprod] = {'x': df['temp'], 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_std']}
+  
+  def save_util(name:str):
+    if name == 'producer':
+      nprod_dict = nprod_dict_avg_produtility
+    else:
+      nprod_dict = nprod_dict_avg_userutility
+    line_styles = [':o',':s' ,':o' ,':s'] # dotted circle and square
+    plt.figure()
+    plt.xscale('log')
+    idx = 0
+    for key, value in nprod_dict.items():
+        plt.errorbar(**value, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
+                    alpha=0.9, markersize=4, label = f'{key} producers')
+        idx += 1
+    plt.legend(loc= "upper right")
+    plt.xlabel("Temperature")
+    plt.ylabel(f"Average {name} utility")
+    plt.savefig(filedest + f'avg_{name}_utility.pdf', bbox_inches='tight')
+
+  save_util(name = 'producer')
+  save_util(name = 'user')
+
+def plot_utils_tempvar_dimcurves__errbar(dict_df:dict, filedest:str, nprod = 20):
+  '''
+    producer and user utility averaged across seeds
+    One curve each for producers in nprodlist e.g. 5, 10, 15, 20 dimension
+    x axis has temperature, y axis has avg utility
+
+    dict_df: dictionarty of dataframs keys temperature 0.01, 0.1, 1, 10, 100, linear
+
+    2 plots one for producer utility, one for user utility saved in filedest
+  '''
+  def df_agg_utils(df, temp:int):
+    '''
+      average across seeds
+
+      Returns 
+      df_agg has columns: dimension, nprod, avg_prod_util_mean, avg_prod_util_std, avg_user_util_mean, avg_user_util_std
+    '''
+    groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
+    cols = groups + ['avg_prod_util', 'avg_user_util']
+    df = df[df['NE_exists'] == True][cols]
+    df_agg = df.groupby(groups).agg([np.mean, np.std]) # iters_to_NE will get mean, std; we group by dimensions, num_prod
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and std
+    df_agg.reset_index(inplace=True)
+    df_agg['temp'] = temp # add a column for temperatur
+    return df_agg
+
+  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # concatenate across tempeartures
+  dimlist = df_sm['dimension'].unique()
+  dim_dict_avg_produtility = {} # this is used for plotting
+  dim_dict_avg_userutility = {}
+  for dim in dimlist:
+    df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
+    df.sort_values(by = 'temp', inplace = True)
+    dim_dict_avg_produtility[dim] = {'x': df['temp'], 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_std']}
+    dim_dict_avg_userutility[dim] = {'x': df['temp'], 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_std']}
+  
+  def save_util(name:str):
+    if name == 'producer':
+      dim_dict = dim_dict_avg_produtility
+    else:
+      dim_dict = dim_dict_avg_userutility
+    line_styles = [':o',':s' ,':o' ,':s'] # dotted circle and square
+    plt.figure()
+    plt.xscale('log')
+    idx = 0
+    for key, value in dim_dict.items():
+        plt.errorbar(**value, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
+                    alpha=0.9, markersize=4, label = f'{key} dimensions')
+        idx += 1
+    plt.legend(loc= "upper right")
+    plt.xlabel("Temperature")
+    plt.ylabel(f"Average {name} utility")
+    plt.savefig(filedest + f'avg_{name}_utility.pdf', bbox_inches='tight')
+
+  save_util(name = 'producer')
+  save_util(name = 'user')
+
+
 def plot_4dim_numiternew_errbar(df, filename):
   '''
     num iters dataframe with 40 runs for each dim, prod, single seed 
+    4 curves for 4 dimensions of embeddings
+    x axis has number of producers
 
   '''
   def agg_num_iterdf(df):
