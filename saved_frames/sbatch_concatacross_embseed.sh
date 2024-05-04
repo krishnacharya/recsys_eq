@@ -9,6 +9,6 @@
 module load anaconda3/2022.05.0.1
 conda activate recsys
 
-data="synth-skewed"
+data="amznmusic"
 
 python main_concat_embseed.py --data ${data}
