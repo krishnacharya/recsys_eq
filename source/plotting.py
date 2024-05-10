@@ -165,18 +165,17 @@ def plot_4dim_numiternew_errbar(df, filename):
     num iters dataframe with 40 runs for each dim, prod, single seed 
     4 curves for 4 dimensions of embeddings
     x axis has number of producers
-
   '''
   def agg_num_iterdf(df):
     '''
       Returns 
-      df_agg has columns dimension, num_prod, iters_to_NE_mean, iters_to_NE_std
+      df_agg has columns dimension, num_prod, iters_to_NE_mean, iters_to_NE_sem
     '''
     groups = ['dimension', 'nprod'] # groupby columns
     cols = ['dimension', 'nprod', 'iters_to_NE']
     df = df[df['NE_exists'] == True][cols]
-    df_agg = df.groupby(groups).agg([np.mean, np.std]) # iters_to_NE will get mean, std; we group by dimensions, num_prod
-    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and std
+    df_agg = df.groupby(groups).agg(['mean','sem']) # iters_to_NE will get mean, sem: std/sqrt{#runs}
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and standard error of mean
     df_agg.reset_index(inplace=True)
     return df_agg
 
@@ -187,22 +186,22 @@ def plot_4dim_numiternew_errbar(df, filename):
   data_dim5 = {
     'x': nprods,
     'y': df_agg[df_agg['dimension'] == 5]['iters_to_NE_mean'],
-    'yerr': df_agg[df_agg['dimension'] == 5]['iters_to_NE_std']}
+    'yerr': df_agg[df_agg['dimension'] == 5]['iters_to_NE_sem']}
   
   data_dim10 = {
     'x': nprods+0.3,   # adding offsets to x to make standard error bars non-overlapping
     'y': df_agg[df_agg['dimension'] == 10]['iters_to_NE_mean'],
-    'yerr': df_agg[df_agg['dimension'] == 10]['iters_to_NE_std']}
+    'yerr': df_agg[df_agg['dimension'] == 10]['iters_to_NE_sem']}
 
   data_dim15 = {
     'x': nprods-0.3,
     'y': df_agg[df_agg['dimension'] == 15]['iters_to_NE_mean'],
-    'yerr': df_agg[df_agg['dimension'] == 15]['iters_to_NE_std']}
+    'yerr': df_agg[df_agg['dimension'] == 15]['iters_to_NE_sem']}
   
   data_dim20 = {
     'x': nprods+0.5,
     'y': df_agg[df_agg['dimension'] == 20]['iters_to_NE_mean'],
-    'yerr': df_agg[df_agg['dimension'] == 20]['iters_to_NE_std']}
+    'yerr': df_agg[df_agg['dimension'] == 20]['iters_to_NE_sem']}
   line_styles = [':o',':s' ,':o' , ':s'] # dotted circle and square
   plt.figure()
   for idx, data in enumerate([data_dim5, data_dim10, data_dim15, data_dim20]):
