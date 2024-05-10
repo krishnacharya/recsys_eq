@@ -61,13 +61,13 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest
       average across seeds
 
       Returns 
-      df_agg has columns: dimension, nprod, avg_prod_util_mean, avg_prod_util_std, avg_user_util_mean, avg_user_util_std
+      df_agg has columns: dimension, nprod, avg_prod_util_mean, avg_prod_util_sem, avg_user_util_mean, avg_user_util_sem
     '''
     groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
     cols = groups + ['avg_prod_util', 'avg_user_util']
     df = df[df['NE_exists'] == True][cols]
-    df_agg = df.groupby(groups).agg([np.mean, np.std]) # iters_to_NE will get mean, std; we group by dimensions, num_prod
-    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and std
+    df_agg = df.groupby(groups).agg(['mean', 'sem']) # iters_to_NE will get mean, standard error of mean; we group by dimensions, num_prod
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and SEM
     df_agg.reset_index(inplace=True)
     df_agg['temp'] = temp # add a column for temperatur
     return df_agg
@@ -78,21 +78,25 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest
   for nprod in nprodlist:
     df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
     df.sort_values(by = 'temp', inplace = True)
-    nprod_dict_avg_produtility[nprod] = {'x': df['temp'], 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_std']}
-    nprod_dict_avg_userutility[nprod] = {'x': df['temp'], 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_std']}
+    nprod_dict_avg_produtility[nprod] = {'x': df['temp'], 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_sem']}
+    nprod_dict_avg_userutility[nprod] = {'x': df['temp'], 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_sem']}
   
+  ls_list = ['solid', 'dotted', 'dashed', 'dashdot'] # different linestyles
+  color_list = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf'] # suitable for colorblind 
+
   def save_util(name:str):
     if name == 'producer':
       nprod_dict = nprod_dict_avg_produtility
     else:
       nprod_dict = nprod_dict_avg_userutility
-    line_styles = [':o',':s' ,':o' ,':s'] # dotted circle and square
     plt.figure()
     plt.xscale('log')
     idx = 0
     for key, value in nprod_dict.items():
-        plt.errorbar(**value, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
-                    alpha=0.9, markersize=4, label = f'{key} producers')
+        # plt.errorbar(**value, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
+        #             alpha=0.9, markersize=4, label = f'{key} producers')
+        plt.errorbar(**value, linestyle = ls_list[idx], color = color_list[idx], capsize=3, capthick=1, elinewidth=1, \
+                   alpha=1.0, markersize=4, label = f'{key} producers')
         idx += 1
     plt.legend(loc= "upper right")
     plt.xlabel("Temperature")
@@ -160,7 +164,7 @@ def plot_utils_tempvar_dimcurves__errbar(dict_df:dict, filedest:str, nprod = 20)
   save_util(name = 'user')
 
 
-def plot_4dim_numiternew_errbar(df, filename):
+def plot_4dim_numiternew_errbar(df, filename): # num iters
   '''
     num iters dataframe with 40 runs for each dim, prod, single seed 
     4 curves for 4 dimensions of embeddings
@@ -202,11 +206,15 @@ def plot_4dim_numiternew_errbar(df, filename):
     'x': nprods+0.5,
     'y': df_agg[df_agg['dimension'] == 20]['iters_to_NE_mean'],
     'yerr': df_agg[df_agg['dimension'] == 20]['iters_to_NE_sem']}
-  line_styles = [':o',':s' ,':o' , ':s'] # dotted circle and square
+  # ls_list = [':o',':s' ,':o' , ':s']
+  ls_list = ['solid','dotted', 'dashed', 'dashdot'] # different linestyles
+  color_list = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf'] # suitable for colorblind 
   plt.figure()
   for idx, data in enumerate([data_dim5, data_dim10, data_dim15, data_dim20]):
-      plt.errorbar(**data, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
-                   alpha=0.9, markersize=4, label = f'dimension = {dims[idx]}')
+      # plt.errorbar(**data, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
+      #              alpha=0.9, markersize=4, label = f'dimension = {dims[idx]}')
+      plt.errorbar(**data, linestyle = ls_list[idx], color = color_list[idx], capsize=3, capthick=1, elinewidth=1, \
+                   alpha=0.9, markersize=4, label = f'dimension = {dims[idx]}')            
   plt.legend(loc= "upper left")
   plt.xlabel("Number of producers")
   plt.ylabel("Iterations to NE")
