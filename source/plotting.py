@@ -43,15 +43,15 @@ def user_producer_2bar_plot_display(pd, ud): #producer distribution and user dis
 
     plt.xticks(range(dim))
     plt.show()
-  
 
-def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest:str, dim = 15):
+def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, df_linear:pd.DataFrame, nprodlist:list, filedest:str, dim = 15):
   '''
     producer and user utility averaged across seeds
     One curve each for producers in nprodlist e.g. 2, 10, 50, 100 producers
     x axis has temperature, y axis has avg utility
 
-    dict_df: dictionarty of dataframs keys temperature 0.01, 0.1, 1, 10, 100, linear
+    dict_df: dictionarty of dataframs keys as softmax temperatures 0.01, 0.1, 1, 10, 100
+    df_linear: linear serving dataframe
     nprodlist: list of ints, expecting 4 different total number of producers e.g [2, 10, 50, 100]
 
     2 plots one for producer utility, one for user utility saved in filedest
@@ -72,14 +72,16 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest
     df_agg['temp'] = temp # add a column for temperatur
     return df_agg
 
-  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # concatenate across tempeartures
+  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # softmax temps
+  df_linear_agg = df_agg_utils(df = df_linear, temp = 1.0) # temp really doesnt matter but is a parameter so passing a dummy value
   nprod_dict_avg_produtility = {} # this is used for plotting
   nprod_dict_avg_userutility = {}
-  for nprod in nprodlist:
+  for idx, nprod in enumerate(nprodlist):
     df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
     df.sort_values(by = 'temp', inplace = True)
-    nprod_dict_avg_produtility[nprod] = {'x': df['temp'], 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_sem']}
-    nprod_dict_avg_userutility[nprod] = {'x': df['temp'], 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_sem']}
+    stagger_shift = (-1)**idx * idx*1e-4 # shift that the error bars stagger and dont overlap with others
+    nprod_dict_avg_produtility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['avg_prod_util_mean'], 'yerr': df['avg_prod_util_sem']}
+    nprod_dict_avg_userutility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['avg_user_util_mean'], 'yerr': df['avg_user_util_sem']}
   
   ls_list = ['solid', 'dotted', 'dashed', 'dashdot'] # different linestyles
   color_list = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf'] # suitable for colorblind 
@@ -87,16 +89,19 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, nprodlist:list, filedest
   def save_util(name:str):
     if name == 'producer':
       nprod_dict = nprod_dict_avg_produtility
+      linutilkey = 'avg_prod_util_mean'
     else:
       nprod_dict = nprod_dict_avg_userutility
+      linutilkey = 'avg_user_util_mean'
     plt.figure()
     plt.xscale('log')
     idx = 0
-    for key, value in nprod_dict.items():
-        # plt.errorbar(**value, fmt=line_styles[idx], capsize=3, capthick=1, elinewidth=1, \
-        #             alpha=0.9, markersize=4, label = f'{key} producers')
+    for nprod, value in nprod_dict.items():
+        linutil = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilkey]
+        # plt.plot(0.0, linutil, marker = 'x', color = color_list[idx])# plot marker on y axis for linear rules util
+        plt.scatter([0.01]*2, [linutil]*2, marker = 'x', color = color_list[idx])
         plt.errorbar(**value, linestyle = ls_list[idx], color = color_list[idx], capsize=3, capthick=1, elinewidth=1, \
-                   alpha=1.0, markersize=4, label = f'{key} producers')
+                   alpha=1.0, markersize=4, label = f'{nprod} producers')
         idx += 1
     plt.legend(loc= "upper right")
     plt.xlabel("Temperature")
