@@ -117,6 +117,79 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, df_linear:pd.DataFrame, 
   save_util(name = 'producer')
   save_util(name = 'user')
 
+def plot_minutils_tempvar_prodcurves(dict_df:dict, df_linear:pd.DataFrame, nprodlist:list, filedest:str, dim = 15):
+  '''
+    min producer utility and min user utility averaged across seeds
+    One curve each for producers in nprodlist e.g. 2, 10, 50, 100 producers
+    x axis has temperature, y axis has min utility
+
+    dict_df: dictionarty of dataframs keys as softmax temperatures 0.01, 0.1, 1, 10, 100
+    df_linear: linear serving dataframe
+    nprodlist: list of ints, expecting 4 different total number of producers e.g [2, 10, 50, 100]
+
+    2 plots one for producer utility, one for user utility saved in filedest
+  '''
+  def df_agg_utils(df, temp:int):
+    '''
+      average across seeds
+
+      Returns 
+      df_agg has columns: dimension, nprod, min_prod_util_mean, min_prod_util_sem, min_user_util_mean, min_user_util_sem
+    '''
+    groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
+    cols = groups + ['min_prod_util', 'min_user_util']
+    df = df[df['NE_exists'] == True][cols]
+    df_agg = df.groupby(groups).agg(['mean', 'sem']) # iters_to_NE will get mean, standard error of mean; we group by dimensions, num_prod
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and SEM
+    df_agg.reset_index(inplace=True)
+    df_agg['temp'] = temp # add a column for temperatur
+    return df_agg
+
+  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # softmax temps
+  df_linear_agg = df_agg_utils(df = df_linear, temp = 1.0) # temp really doesnt matter but is a parameter so passing a dummy value
+  nprod_dict_min_produtility = {} # this is used for plotting
+  nprod_dict_min_userutility = {}
+  for idx, nprod in enumerate(nprodlist):
+    df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
+    df.sort_values(by = 'temp', inplace = True)
+    stagger_shift = (-1)**idx * idx*1e-4 # shift that the error bars stagger and dont overlap with others
+    nprod_dict_min_produtility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['min_prod_util_mean'], 'yerr': df['min_prod_util_sem']}
+    nprod_dict_min_userutility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['min_user_util_mean'], 'yerr': df['min_user_util_sem']}
+  
+  ls_list = ['solid', 'dotted', 'dashed', 'dashdot'] # different linestyles
+  color_list = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf'] # suitable for colorblind 
+
+  def save_util(name:str):
+    if name == 'producer':
+      nprod_dict = nprod_dict_min_produtility
+      linutilkey = 'min_prod_util_mean'
+    else:
+      nprod_dict = nprod_dict_min_userutility
+      linutilkey = 'min_user_util_mean'
+    # plt.figure()
+    # plt.xscale('log')
+    idx = 0
+    fig, ax = plt.subplots()
+    ax.set_xscale('log')
+    for nprod, value in nprod_dict.items():
+        linutil = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilkey]
+        # plt.scatter([0.01]*2, [linutil]*2, marker = 'x', color = color_list[idx]) #single cross
+        # plt.axhline(y = linutil,  linestyle = ls_list[idx], color = color_list[idx])
+        # print(type(linutil.iloc[0]), linutil.iloc[0])
+        # ax.axhline(linutil.iloc[0], linestyle = ls_list[idx], color = color_list[idx], alpha=0.6)
+        # plt.errorbar(**value, linestyle = ls_list[idx], color = color_list[idx], capsize=3, capthick=1, elinewidth=1, \
+        #            alpha=1.0, markersize=4, label = f'{nprod} producers')
+        ax.errorbar(**value, linestyle = ls_list[idx], color = color_list[idx], capsize=3, capthick=1, elinewidth=1, \
+                   alpha=1.0, markersize=4, label = f'{nprod} producers')
+        idx += 1
+    ax.legend(loc= "upper right")
+    ax.set_xlabel("Temperature")
+    ax.set_ylabel(f"Minimum {name} utility")
+    fig.savefig(filedest + f'min_{name}_utility.pdf', bbox_inches='tight')
+
+  save_util(name = 'producer')
+  save_util(name = 'user')
+
 def plot_utils_tempvar_prodcurves_linvssm(dict_df:dict, df_linear:pd.DataFrame, nprodlist:list, filedest:str, dim = 15): #only want to plot fixed number of prod and dim, TO REFACTOR
   '''
     producer and user utility averaged across seeds
@@ -186,6 +259,79 @@ def plot_utils_tempvar_prodcurves_linvssm(dict_df:dict, df_linear:pd.DataFrame, 
     ax.set_xlabel("Temperature")
     ax.set_ylabel(f"Average {name} utility")
     fig.savefig(filedest + f'avg_{name}_utility.pdf', bbox_inches='tight')
+
+  save_util(name = 'producer')
+  save_util(name = 'user')
+
+def plot_minutils_tempvar_prodcurves_linvssm(dict_df:dict, df_linear:pd.DataFrame, nprodlist:list, filedest:str, dim = 15): #only want to plot fixed number of prod and dim, TO REFACTOR
+  '''
+    producer and user min utility averaged across seeds
+    One curve each for producers in nprodlist e.g. 2, 10, 50, 100 producers
+    x axis has temperature, y axis has min utility
+
+    dict_df: dictionarty of dataframs keys as softmax temperatures 0.01, 0.1, 1, 10, 100
+    df_linear: linear serving dataframe
+    nprodlist: list of ints, expecting 4 different total number of producers e.g [2, 10, 50, 100]
+
+    2 plots one for min producer utility, one for min user utility linear vs softmax serving rule
+  '''
+  def df_agg_utils(df, temp:int):
+    '''
+      average across seeds
+
+      Returns 
+      df_agg has columns: dimension, nprod, min_prod_util_mean, min_prod_util_sem, min_user_util_mean, min_user_util_sem
+    '''
+    groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
+    cols = groups + ['min_prod_util', 'min_user_util']
+    df = df[df['NE_exists'] == True][cols]
+    df_agg = df.groupby(groups).agg(['mean', 'sem']) # iters_to_NE will get mean, standard error of mean; we group by dimensions, num_prod
+    df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and SEM
+    df_agg.reset_index(inplace=True)
+    df_agg['temp'] = temp # add a column for temperatur
+    return df_agg
+
+  df_sm = pd.concat([df_agg_utils(df, temperature_key) for temperature_key, df in dict_df.items()]) # softmax temps
+  df_linear_agg = df_agg_utils(df = df_linear, temp = 1.0) # temp really doesnt matter but is a parameter so passing a dummy value
+  nprod_dict_min_produtility = {} # this is used for plotting
+  nprod_dict_min_userutility = {}
+  for idx, nprod in enumerate(nprodlist):
+    df = df_sm[(df_sm['dimension'] == dim)  & (df_sm['nprod'] == nprod)] # will have 5 different temps
+    df.sort_values(by = 'temp', inplace = True)
+    stagger_shift = (-1)**idx * idx*1e-4 # shift that the error bars stagger and dont overlap with others
+    nprod_dict_min_produtility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['min_prod_util_mean'], 'yerr': df['min_prod_util_sem']}
+    nprod_dict_min_userutility[nprod] = {'x': df['temp'] + stagger_shift, 'y': df['min_user_util_mean'], 'yerr': df['min_user_util_sem']}
+  
+  ls_list = ['solid', 'dotted', 'dashed', 'dashdot'] # different linestyles
+  color_list = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf'] # suitable for colorblind 
+  temps = df_sm.temp.unique()
+  def save_util(name:str):
+    if name == 'producer':
+      nprod_dict = nprod_dict_min_produtility
+      linutilmean_key = 'min_prod_util_mean'
+      linutilsem_key = 'min_prod_util_sem'
+    else:
+      nprod_dict = nprod_dict_min_userutility
+      linutilmean_key = 'min_user_util_mean'
+      linutilsem_key = 'min_user_util_sem'
+    # plt.figure()
+    # plt.xscale('log')
+    idx = 0
+    fig, ax = plt.subplots()
+    ax.set_xscale('log')
+    for nprod, value in nprod_dict.items():
+        linutil_mean = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilmean_key]
+        linutil_sem = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilsem_key]
+
+        ax.errorbar(temps, [linutil_mean.iloc[0]]*len(temps), [linutil_sem.iloc[0]]*len(temps), linestyle = 'solid', color = '#377eb8', capsize=3, capthick=1, elinewidth=1, \
+                   alpha=0.6, markersize=4, label = f'{nprod} producers, linear') #
+        ax.errorbar(**value, linestyle = 'dotted', color = '#e41a1c', capsize=3, capthick=1, elinewidth=1, \
+                   alpha=1.0, markersize=4, label = f'{nprod} producers, softmax')
+        idx += 1
+    ax.legend(loc= "upper right")
+    ax.set_xlabel("Temperature")
+    ax.set_ylabel(f"Minimum {name} utility")
+    fig.savefig(filedest + f'min_{name}_utility.pdf', bbox_inches='tight')
 
   save_util(name = 'producer')
   save_util(name = 'user')
