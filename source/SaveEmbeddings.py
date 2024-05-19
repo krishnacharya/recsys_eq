@@ -21,14 +21,12 @@ def generate_uniform_users(dimension, num_users = 10000) -> np.array:
   '''
   return np.array([generate_uniform_user(dimension=dimension) for _ in range(num_users)])
 
-def save_movielens100k(): # Need to deprecate
-    for dim in common_config['dimensions']:
-        for seed in common_config['seeds']:
-            np.random.seed(seed = seed) #TODO?
-            data = Dataset.load_builtin("ml-100k")
-            algo = NMF(n_factors=dim)
-            cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
-            np.save(f'../saved_embeddings/movielens100k/nmf/dim{dim}_seed{seed}',algo.pu)
+def save_movielens100k(dimension:int, seed:int) -> None:
+    np.random.seed(seed = seed)
+    data = Dataset.load_builtin("ml-100k")
+    algo = NMF(n_factors = dimension)
+    cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+    np.save(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}',algo.pu) #save user embeddings, not L1 normalized
 
 def save_synth_uniform(dimension:int, seed:int, num_users = 10000):
     '''

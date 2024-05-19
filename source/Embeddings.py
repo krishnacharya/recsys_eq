@@ -40,65 +40,23 @@ class Synth_Skewed_Embedding(Embedding):
         user_emb = np.load(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1") # normalized user embedding
 
-    # def generate_skewed_users(self, dimension, num_users = 10000) -> np.array:
-    #     '''
-    #         Get a numpy array of shape num_users x dimension
-    #         with each row representing a user on the proability simplex, i.e.\sum_j x_ij = 1
-    #         Deprecated, used to return L1 normalized embedding of weighted
-    #     '''
-    #     weights = np.sort(generate_uniform_user(dimension)) # shape d, from the probbability simplex
-    #     ue = generate_uniform_users(dimension, num_users = num_users) # shape Num users, d
-    #     return normalize(ue * weights, norm = "l1")
-
 class RentRunway_Embedding(Embedding):
-    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
+    def __init__(self, seed, dimension, num_users): # hacky!, num_users is not used here as rentrunway has a fixed number of users
         user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
 
 class AmazonMusic_Embedding(Embedding):
-    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as rentrunway has a fixed number of users
+    def __init__(self, seed, dimension, num_users):
         user_emb = np.load(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
 
 class Movielens_100k_Embedding(Embedding):
-    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
+    def __init__(self, seed, dimension, num_users):
         user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1")
-        # _, self.nue = self.get_user_embeddings_movielens100k(dimension) # normalized user embeddings
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
-    
-    # def get_user_embeddings_movielens100k(self, dimension):
-    #     '''
-    #         Gets embeddings for movielens 100k dataset
-    #         Returns tuple
-    #         User embeddings, and L1 normalized user embeddings
-    #     '''
-    #     data = Dataset.load_builtin("ml-100k")
-    #     algo = NMF(n_factors=dimension)
-    #     cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
-    #     normalized_embeddings = normalize(algo.pu,  norm = "l1")
-    #     return algo.pu, normalized_embeddings
-
-class Movielens_1m_Embedding(Embedding):
-    def __init__(self, seed, dimension, num_users): # hacky!, num_users is useless here as movielnes has a fixed number of users
-        np.random.seed(seed = seed) # set seed for randomness in NMF factorization TODO deprecated
-        _, self.nue = self.get_user_embeddings_movielens1m(dimension) # normalized user embeddings
-        self.dimension = dimension
-        self.num_users = self.nue.shape[0]
-    
-    # def get_user_embeddings_movielens1m(self, dimension):
-    #     '''
-    #         Gets embeddings for movielens 100k dataset
-    #         Returns tuple
-    #         User embeddings, and L1 normalized user embeddings
-    #     '''
-    #     data = Dataset.load_builtin("ml-1m")
-    #     algo = NMF(n_factors=dimension)
-    #     cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
-    #     normalized_embeddings = normalize(algo.pu,  norm = "l1")
-    #     return algo.pu, normalized_embeddings
