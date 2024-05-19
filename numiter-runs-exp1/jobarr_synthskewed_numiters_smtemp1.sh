@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J synthske-numiter-sm1
-#SBATCH --array=1-10
+#SBATCH --array=1-40
 #SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
@@ -16,7 +16,7 @@ echo "parameters for iteration: ${iteration}"
 data="synth-skewed"
 prob="softmax"
 temp="1"
-cc="config_less_seeds"
+cc="config_seedproddim"
 emb_seed="29"
 
 
