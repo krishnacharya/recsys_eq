@@ -1,16 +1,9 @@
-# import sys
-# sys.path.append('../scripts')
-# from utils import load_config
 import surprise
 from surprise import Dataset, Reader
 from surprise import NMF
 from surprise.model_selection import cross_validate
 import numpy as np
 import pandas as pd
-
-# common_config = load_config('../configs/common_config.yml') # dictionary with common seeds, dimension, nprods
-# print(common_config['seeds'])
-# print(common_config['dimensions'])
 
 def generate_uniform_user(dimension) -> np.array:
     '''
