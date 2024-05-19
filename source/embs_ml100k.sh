@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J ml100k_generate
 #SBATCH --array=1-40
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
 #SBATCH --output=./Sbatch-rep/ml100k_generate.%A\_%a.out

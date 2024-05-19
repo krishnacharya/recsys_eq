@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J amzn_music_numiters
 #SBATCH --array=1-40
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=10G
 #SBATCH --time=2-00:00:00
 #SBATCH --output=./Sbatch-reports/amzn-numi-sm1.%A\_%a.out

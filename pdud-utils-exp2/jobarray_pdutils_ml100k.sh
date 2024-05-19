@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J ml100k-pdutils
 #SBATCH --array=1-30
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=2:00:00
 #SBATCH --output=./Sbatch-reports/ml100k-pdutil.%A\_%a.out

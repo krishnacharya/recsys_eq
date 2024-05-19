@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J synthske-numiter-linear
 #SBATCH --array=1-40
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=2:00:00
 #SBATCH --output=./Sbatch-reports/synthske-numiter-linear.%A\_%a.out

@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J amznmusic_pdutils
 #SBATCH --array=1-11
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=10G
 #SBATCH --time=2-00:00:00
 #SBATCH --output=./Sbatch-reports/amznmusic_pdutils.%A\_%a.out

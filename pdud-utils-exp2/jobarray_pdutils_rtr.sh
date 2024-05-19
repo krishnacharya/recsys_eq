@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -J rtr-pdutils
 #SBATCH --array=1-30
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
 #SBATCH --output=./Sbatch-reports/rtr-pdutils.%A\_%a.out

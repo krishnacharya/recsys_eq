@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH -J synthuconcat
-#SBATCH -A gts-jziani3
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=24:00:00
 #SBATCH --output=./Sbatch-reports/mlsynthconcatembseed.%A\_%a.out
