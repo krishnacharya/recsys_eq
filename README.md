@@ -13,9 +13,8 @@ Organization:
 - The workflow involves creating an ProducersEngagementGame object, then calling `best_response_dynamics` on it, all the scripts in the `scripts` directory follow this workflow.
 - We use the following values for the random seeds for user embedding generation [13, 17, 19, 23, 29], dimension of embeddings = [5, 10, 15, 20] and the number of producers [2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] (see `configs/config_seedproddim.yml`)
 - We first cache user embeddings for the various datasets using `src/embs_ml100k.sh`,  `src/embs_amznmusic.sh`, `src/embs_rentrunway.sh`, `src/embs_synthdata.sh`
-- We run experiment 1 on number of iterations using the scripts `jobarr_*.sh` in `numiter-runs-exp1`, the results are saved in `numiters_savedframe`
-- For experiment 2 on producer distribution and utility we run the scripts `jobarray_*.sh` in `pdud-utils-exp2`, the results are saved in `saved_frames`
-- To generate the plots we use the jupyter notebooks in `notebooks`
-- All the figures in the paper are in the `plots` folder.
+- We run experiment 1 for number of iterations using the scripts `jobarr_*.sh` in `numiter-runs-exp1`, the results are saved in `numiters_savedframe`
+- For experiment 2 for producer distribution and utility we run the scripts `jobarray_*.sh` in `pdud-utils-exp2`, the results are saved in `saved_frames`
+- To generate the plots we use the jupyter notebooks in `notebooks`, and all the figures in the paper are in the `plots` folder.
 
-Conda environment is available in `recsys_eq.yml`
+The Conda environment is available in `recsys_eq.yml`
