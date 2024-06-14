@@ -1,0 +1,10 @@
+seeds:
+- 2
+- 11
+- 13
+dimensions:
+- 5
+- 10
+n_prodarr:
+- 10
+- 20
