@@ -204,6 +204,66 @@ def plot_4dim_numiternew_errbar(df, filename): # num iters
   plt.ylabel("Iterations to NE")
   plt.savefig(filename, bbox_inches='tight')
 
+
+def plot_ndim_numiter_errbar(df, filename):
+    """
+    Plots iterations to NE with error bars for multiple dimensions.
+    Handles any number of dimensions dynamically.
+
+    Parameters:
+    - df: Input DataFrame containing columns: 'dimension', 'nprod', 'iters_to_NE', 'NE_exists'
+    - filename: Output filename for the saved plot
+    """
+
+    def agg_num_iterdf(df):
+        """
+        Aggregates the DataFrame to compute mean and SEM for iterations to NE.
+        Returns a DataFrame with columns: dimension, nprod, iters_to_NE_mean, iters_to_NE_sem
+        """
+        groups = ['dimension', 'nprod']
+        cols = ['dimension', 'nprod', 'iters_to_NE']
+        df = df[df['NE_exists'] == True][cols]
+        df_agg = df.groupby(groups).agg(['mean', 'sem'])
+        df_agg.columns = df_agg.columns.map("_".join)  # Flatten multi-index columns
+        df_agg.reset_index(inplace=True)
+        return df_agg
+
+    df_agg = agg_num_iterdf(df)
+    dims = sorted(df_agg['dimension'].unique())
+    nprods = df_agg['nprod'].unique()
+
+    # Dynamically generate styles and offsets
+    offsets = [-0.3, 0, 0.3, 0.5, -0.5, 0.7]  # Extend dynamically as needed
+    linestyles = ['solid', 'dotted', 'dashed', 'dashdot', '--', '-.']  # Extend dynamically as needed
+    colors = ['#377eb8', '#e41a1c', '#ff7f00', '#f781bf', '#4daf4a', '#984ea3']  # Suitable for colorblind
+
+    plt.figure()
+    for idx, dim in enumerate(dims):
+        offset = offsets[idx % len(offsets)]  # Cycle through offsets
+        linestyle = linestyles[idx % len(linestyles)]  # Cycle through linestyles
+        color = colors[idx % len(colors)]  # Cycle through colors
+
+        data = df_agg[df_agg['dimension'] == dim]
+        plt.errorbar(
+            x=nprods + offset,
+            y=data['iters_to_NE_mean'],
+            yerr=data['iters_to_NE_sem'],
+            linestyle=linestyle,
+            color=color,
+            capsize=3,
+            capthick=1,
+            elinewidth=1,
+            alpha=0.9,
+            markersize=4,
+            label=f'dimension = {dim}'
+        )
+
+    plt.legend(loc="upper left")
+    plt.xlabel("Number of producers")
+    plt.ylabel("Iterations to NE")
+    plt.savefig(filename, bbox_inches='tight')
+
+
 def plot_and_save_singledf(dims:list, df:pd.DataFrame, name:str, nprod = 100, seed=17):
   distributions = ['user_dist', 'producer_dist']
   for d in dims:
