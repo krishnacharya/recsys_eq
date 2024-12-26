@@ -15,7 +15,7 @@ echo "parameters for iteration: ${iteration}"
 data="amznmusic"
 prob="linear"
 temp="1"
-cc="config_seedproddim"
+cc="config_seedproddim_dim100"
 emb_seed="29"
 
 python main_run_numiter.py --data ${data} --prob ${prob} --temp ${temp} --common_config ${cc} --runnum ${n} --emb_seed ${emb_seed}

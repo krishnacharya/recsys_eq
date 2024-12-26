@@ -40,7 +40,7 @@ def main():
         raise NotImplementedError
     print(f'Temperature is {args.temperature}, embedding seed is {args.emb_seed}')
 
-    final_dir = args.save_dir + f'embseed{args.emb_seed}/'+ f'{args.data}_{args.prob}_temp_{args.temperature}'
+    final_dir = args.save_dir + f'embseed{args.emb_seed}/'+ f'{args.data}_{args.prob}_new_temp_{args.temperature}'
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/run_' + args.runnum + '.pkl'
     run_numiters(args.runnum, common_config['dimensions'], args.emb_seed, \

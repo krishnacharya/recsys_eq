@@ -46,6 +46,9 @@ def save_synth_skewed(dimension:int, seed:int, num_users = 10000):
     ue = generate_skewed_users(dimension=dimension, num_users = num_users) # not L1 normalized
     np.save(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}', ue) #save user embeddings
 
+def save_synth_sparse(dimension:int, seed:int, num_users = 10000):
+    pass
+
 def save_amazon_music(dimension:int, seed:int) -> None:
     def get_surprise_compatible():
         df = pd.read_csv('../data/Digital_Music.csv')

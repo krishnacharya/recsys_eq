@@ -20,6 +20,20 @@ def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, in
     max_cord_sum = ua_sum[best_strat_index]
     return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
 
+def random_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
+    
+    ''' 
+        content_vector : shape is (dimension,)
+        remaining_array: shape in (N_producers - 1, dimension)
+        user_array: shape is (N_users, dimension)
+        Returns
+            numpy array of shape (N_user,), linear proabibility of each user getting recommended to `content_vector` (the producer who sets their vector)  
+    '''
+    Nprod = (remaining_array.shape[0] + 1)
+    Nuser = user_array.shape[0]
+    return np.full(Nuser, 1.0 / Nprod)
+
+
 def linear_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
     ''' 
         content_vector : shape is (dimension,)
@@ -138,6 +152,8 @@ class ProducersEngagementGame:
             self.probability_function = linear_probability
         elif prob == 'softmax':
             self.probability_function = softmax_probability
+        elif prob == 'random':
+            self.probability_function = random_probability
         else:
             raise NotImplementedError
     
