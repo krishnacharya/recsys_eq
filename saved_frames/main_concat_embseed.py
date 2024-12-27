@@ -16,8 +16,9 @@ def concat_across_seeds_save(data:str):
         concat_df = pd.concat(pd_list)
         return concat_df, len(pd_list)
 
-    suffixes = ['_linear_temp_1.0', '_softmax_temp_100.0', '_softmax_temp_10.0', '_softmax_temp_1.0',\
+    suffixes = ['_random_temp_1.0', '_linear_temp_1.0', '_softmax_temp_100.0', '_softmax_temp_10.0', '_softmax_temp_1.0',\
     '_softmax_temp_0.1', '_softmax_temp_0.01']
+    suffixes = ['_new' + s for s in suffixes]
     for suffix in suffixes:
         df, num_seeds = get_concatembs_infolder('./'+ data + suffix + '/')
         df.to_pickle('./' + data + suffix + f'/concseeds{num_seeds}.pkl')
