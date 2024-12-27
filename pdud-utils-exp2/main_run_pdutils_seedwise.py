@@ -36,14 +36,14 @@ def main():
         # print("Dataset not defined")
         raise NotImplementedError
     
-    if args.prob not in ['linear', 'softmax']:
+    if args.prob not in ['random', 'linear', 'softmax']:
         # print("Probability not defined")
         raise NotImplementedError
     
     print(f'Temperature is {args.temperature}')
     
 
-    final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}'
+    final_dir = args.save_dir + f'{args.data}_new_{args.prob}_temp_{args.temperature}'
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'
     run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \

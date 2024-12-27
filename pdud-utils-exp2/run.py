@@ -13,7 +13,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
         emb_seed: is used for loading the saved NMF factorization
         n_prodarr: list of number of producers
         Embedding: Class name # the Embedding passed to def run_producer_game is actually a class name, we instanciate an object out of it! Embedding could be a Synth_uniform, Synth_skewed, Movielens type etc...
-        prob: softmax, linear
+        prob: softmax, linear, random
         temp: temperature, won't be used in linear
         n_users: number of users
     '''
@@ -50,7 +50,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                     'max_user_util': user_utils.max(),
                     'min_user_util': user_utils.min(),
                     })
-                else:
+                else: # TODO change to last iterate, analyse last few utilities profiles
                     di.update({
                     'total_prod_util': -1,
                     'avg_prod_util': -1,

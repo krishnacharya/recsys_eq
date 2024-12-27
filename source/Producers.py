@@ -106,8 +106,12 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     dir_producers = np.argmax(prodt, axis=0)
     ratings = user_array @ prodt # shape (N_user, N_prod) ratings ij has what user i rates producer j's content <c_i, s_j>
     prob = None
+    Nprod = producers.shape[0]
+    Nuser = user_array.shape[0]
     if prob_type == 'linear':
         prob = ratings / ratings.sum(axis=1)[:, None] # prob_ij stores <c_i, s_j> / sum_k <c_i, s_k> 
+    elif prob_type == 'random':
+        prob = np.full((Nuser, Nprod), 1.0 / Nprod)
     elif prob_type == 'softmax':
         exp_ratings = np.exp(ratings / temp) # TODO temperature added
         prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
@@ -115,7 +119,7 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     else:
         raise NotImplementedError
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
-    return dir_producers, utility.sum(axis=0), utility.sum(axis = 1)
+    return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
 def get_softmax_prodexposure_usereng_utilities(producers:np.ndarray, user_array:np.ndarray):
     '''
