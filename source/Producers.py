@@ -27,12 +27,11 @@ def random_probability(content_vector:np.ndarray, remaining_array:np.ndarray, us
         remaining_array: shape in (N_producers - 1, dimension)
         user_array: shape is (N_users, dimension)
         Returns
-            numpy array of shape (N_user,), linear proabibility of each user getting recommended to `content_vector` (the producer who sets their vector)  
+            numpy array of shape (N_user,), proabibility of each user seeing producer j's content (the producer who sets their vector)  
     '''
     Nprod = (remaining_array.shape[0] + 1)
     Nuser = user_array.shape[0]
-    return np.full(Nuser, 1.0 / Nprod)
-
+    return np.full(Nuser, 1.0/Nprod)
 
 def linear_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
     ''' 
