@@ -27,6 +27,7 @@ class Embedding(ABC):
     def __init__(self, seed, dimension, num_users):
         pass
 
+# Synth
 class Synth_Uniform_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users):
         self.dimension = dimension
@@ -39,6 +40,28 @@ class Synth_Skewed_Embedding(Embedding):
         self.num_users = num_users
         user_emb = np.load(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}.npy')
         self.nue = normalize(user_emb,  norm = "l1") # normalized user embedding
+
+# Sparse Synth
+class SparseUni(Embedding):
+    def __init__(self, seed, dimension, num_users, fraction=0.9):
+        self.dimension = dimension
+        self.num_users = num_users
+        self.nue = np.load(f'../saved_embeddings/sparse{fraction}_unif/dim{dimension}_seed{seed}.npy')
+
+class SparseSkew(Embedding):
+    def __init__(self, seed, dimension, num_users, fraction=0.9):
+        self.dimension = dimension
+        self.num_users = num_users
+        self.nue = np.load(f'../saved_embeddings/sparse{fraction}_skew/dim{dimension}_seed{seed}.npy')
+
+# Real datasets
+class Movielens_100k_Embedding(Embedding):
+    def __init__(self, seed, dimension, num_users):
+        user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
+        self.nue = normalize(user_emb,  norm = "l1")
+        self.dimension = dimension
+        self.num_users = self.nue.shape[0]
+
 
 class RentRunway_Embedding(Embedding):
     def __init__(self, seed, dimension, num_users): # hacky!, num_users is not used here as rentrunway has a fixed number of users
@@ -54,9 +77,3 @@ class AmazonMusic_Embedding(Embedding):
         self.dimension = dimension
         self.num_users = self.nue.shape[0]
 
-class Movielens_100k_Embedding(Embedding):
-    def __init__(self, seed, dimension, num_users):
-        user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
-        self.nue = normalize(user_emb,  norm = "l1")
-        self.dimension = dimension
-        self.num_users = self.nue.shape[0]
