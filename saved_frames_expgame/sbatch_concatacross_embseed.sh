@@ -9,6 +9,6 @@
 module load anaconda3/2022.05.0.1
 conda activate recsys
 
-data="sparse-skew0.9"
+data="movielens-100k"
 
 python main_concat_embseed.py --data ${data}

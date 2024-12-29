@@ -106,7 +106,7 @@ def run_producer_expsoure_game_singleseedsave(dimensions:list, emb_seed:int, n_p
                     'max_prod_util': prod_utils.max(), 
                     'min_prod_util': prod_utils.min(),
         
-                    'total_user_util': user_utils.sum(), # this is the interesting engagement utility for users
+                    'total_user_util': user_utils.sum(), # this is the engagement utility for users
                     'avg_user_util': user_utils.mean(),
                     'max_user_util': user_utils.max(),
                     'min_user_util': user_utils.min(),
