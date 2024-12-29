@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
     parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter')
+    parser.add_argument('--spfrac', type=float, default=0.9, help='Sparsity fraction for synth sparse datasets')
     parser.add_argument('--exp_seed', type = int, default = 505, help = 'Seed for experiment')
     parser.add_argument('--emb_seed', type = int, help = 'Embedding seed')
     parser.add_argument('--runnum', type = str, help = 'run number, each run is of BR dynamics for a given dim, number of producers, nusers')
@@ -21,23 +22,24 @@ def main():
 
     
     common_config = load_config('../configs/'+str(args.common_config)+'.yml') # dictionary with common seeds, dimension, nprods
-    Embedding = None # class name that is data specific
     if args.data == 'synth-uniform':
-        Embedding = Synth_Uniform_Embedding # assigning class name
+        emb_obj = Synth_Uniform_Embedding() # assigning class name
     elif args.data == 'synth-skewed':
-        Embedding = Synth_Skewed_Embedding
+        emb_obj = Synth_Skewed_Embedding()
     elif args.data == 'movielens-100k':
-        Embedding = Movielens_100k_Embedding
+        emb_obj = Movielens_100k_Embedding()
     elif args.data == 'rentrunway':
-        Embedding = RentRunway_Embedding
+        emb_obj = RentRunway_Embedding()
     elif args.data == 'amznmusic':
-        Embedding = AmazonMusic_Embedding
+        emb_obj = AmazonMusic_Embedding()
+    elif args.data == 'sparse-unif':
+        emb_obj = SparseUni(spfrac=args.spfrac)
+    elif args.data == 'sparse-skew':
+        emb_obj = SparseSkew(spfrac=args.spfrac)
     else:
-        # print("Dataset not defined")
         raise NotImplementedError
     
     if args.prob not in ['random', 'linear', 'softmax']:
-        # print("Probability not defined")
         raise NotImplementedError
     
     print(f'Temperature is {args.temperature}')
@@ -47,7 +49,7 @@ def main():
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'
     run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \
-                    Embedding, args.prob, args.temperature, args.nusers, final_dest, args.exp_seed)
+                    emb_obj, args.prob, args.temperature, args.nusers, final_dest, args.exp_seed)
 
 if __name__ == '__main__':
     main()
