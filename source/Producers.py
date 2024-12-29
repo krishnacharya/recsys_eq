@@ -151,11 +151,12 @@ class ProducersEngagementGame:
         self.BR_dyna_NE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
         self.BruteForce_NE = set() # Nash equilibria arising from brute force vertex search, stores tuples with (n_1...n_d) # of producers in each direction
         self.temp = temp #temperature
-        if prob == 'linear':
+        self.prob_str = prob
+        if self.prob_str == 'linear':
             self.probability_function = linear_probability
-        elif prob == 'softmax':
+        elif self.prob_str == 'softmax':
             self.probability_function = softmax_probability
-        elif prob == 'random':
+        elif self.prob_str == 'random':
             self.probability_function = random_probability
         else:
             raise NotImplementedError
@@ -198,7 +199,7 @@ class ProducersEngagementGame:
                 producers[i] = br
                 return producers, False
         return producers, True
-
+    
     def best_response_dynamics(self, max_iter = 500, verbose = False):
         '''
             Single run of best response dynamics starting from random +ve basis vectors for each producer
@@ -212,14 +213,24 @@ class ProducersEngagementGame:
             if BR dynamics have converged then last_profile will be a NE!
         '''
         producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # random basis vectors, shape N_prod x dimension
-        if verbose: print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
+        if verbose: 
+            print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
+            tot_utilarr = []
+
         for i in range(max_iter):
             producers, converged = self.find_update_best_response(producers)
-            if verbose: print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
+            if verbose: # for diagonizing
+                print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
+                _, prod_util, _ = get_all_engagement_utilities(producers,self.users.user_array, prob_type=self.prob_str, temp = self.temp)
+                tot_utilarr.append(prod_util.sum())
+                print('Total utility', tot_utilarr[-1])
+                print('Producer utilities', prod_util)
             if converged:
                 if verbose: print(f'Number of iterations to coverge: {i}')
                 self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
                 return converged, producers, np.sum(producers, axis=0), i
+        if verbose:
+            return converged, producers, np.sum(producers, axis=0), i, tot_utilarr
         return converged, producers, np.sum(producers, axis=0), i # if BR dynamics do not converge
         
     def brute_force_NEsearch(self):
@@ -246,7 +257,7 @@ class ProducersEngagementGame:
                 self.BruteForce_NE.add(tuple(np.sum(producers, axis = 0))) # adds producer profile, # of producers in each direction to set of NE
         return self.BruteForce_NE
 
-class ProducerSoftmaxExposureGame:
+class ProducerSoftmaxExposureGame: # TODO use this
     def __init__(self, num_producers:int, users:Users):
         self.num_producers = num_producers
         self.dimension = users.dimension
