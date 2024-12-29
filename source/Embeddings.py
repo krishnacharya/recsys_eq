@@ -43,7 +43,7 @@ class Synth_Skewed_Embedding(Embedding):
 
 # Sparse Synthetic
 class SparseUni(Embedding):
-    def __init__(self, num_users, spfrac=0.9):
+    def __init__(self, spfrac=0.9):
         self.spfrac = spfrac
     
     def get_nue(self, seed, dimension):
@@ -52,7 +52,7 @@ class SparseUni(Embedding):
         return self.nue
 
 class SparseSkew(Embedding):
-    def __init__(self, num_users, spfrac=0.9):
+    def __init__(self, spfrac=0.9):
         self.spfrac = spfrac
     
     def get_nue(self, seed, dimension):

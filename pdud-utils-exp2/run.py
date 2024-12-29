@@ -38,7 +38,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                 di['producer_dist'] = last_profile_compact / nprod
                 di['user_dist'] = user_dist
                 if converged:
-                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp) # CHANGE
+                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)
                     di.update({
                     'total_prod_util': prod_utils.sum(),
                     'avg_prod_util': prod_utils.mean(),
@@ -50,18 +50,30 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                     'max_user_util': user_utils.max(),
                     'min_user_util': user_utils.min(),
                     })
-                else: # TODO change to last iterate, analyse last few utilities profiles
-                    di.update({
-                    'total_prod_util': -1,
-                    'avg_prod_util': -1,
-                    'max_prod_util': -1,
-                    'min_prod_util': -1,
+                else:
+                    # di.update({
+                    # 'total_prod_util': -1,
+                    # 'avg_prod_util': -1,
+                    # 'max_prod_util': -1,
+                    # 'min_prod_util': -1,
         
-                    'total_user_util': -1,
-                    'avg_user_util': -1,
-                    'max_user_util': -1,
-                    'min_user_util': -1,
-                    })
+                    # 'total_user_util': -1,
+                    # 'avg_user_util': -1,
+                    # 'max_user_util': -1,
+                    # 'min_user_util': -1,
+                    # })
+                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)
+                    di.update({
+                    'total_prod_util': prod_utils.sum(),
+                    'avg_prod_util': prod_utils.mean(),
+                    'max_prod_util': prod_utils.max(),
+                    'min_prod_util': prod_utils.min(),
+        
+                    'total_user_util': user_utils.sum(),
+                    'avg_user_util': user_utils.mean(),
+                    'max_user_util': user_utils.max(),
+                    'min_user_util': user_utils.min(),
+                    }) # last iterate values
                 pbar.update(1)
                 res.append(di)
     df = pd.DataFrame(res)
