@@ -22,7 +22,6 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
     res = []
     with tqdm(total = tot, mininterval = 600) as pbar:
         for d in dimensions:
-            # emb_obj = Embedding(seed = emb_seed, dimension = d, num_users = n_users) #now we use saved embeddings for movielens
             nue = emb_obj.get_nue(seed = emb_seed, dimension = d)
             user_dist = nue.sum(axis = 0) / nue.sum() # denominator will have the number of numbers, since each row is L1 normalized
             for nprod in n_prodarr:

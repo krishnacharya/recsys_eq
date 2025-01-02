@@ -9,6 +9,6 @@
 module load anaconda3/2022.05.0.1
 conda activate recsys
 
-data="movielens-100k"
+data="synth-uniform"
 
 python main_concat_embseed.py --data ${data}
