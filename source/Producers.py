@@ -1,6 +1,7 @@
 from Users import * # A basic Users class
 import numpy as np
 import torch
+from ServingProbability import Probability
 
 def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, int, np.ndarray]:
     '''
@@ -21,110 +22,6 @@ def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, in
     max_cord_sum = ua_sum[best_strat_index]
     return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
 
-def random_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
-    
-    ''' 
-        content_vector : shape is (dimension,)
-        remaining_array: shape in (N_producers - 1, dimension)
-        user_array: shape is (N_users, dimension)
-        Returns
-            numpy array of shape (N_user,), proabibility of each user seeing producer j's content (the producer who sets their vector)  
-    '''
-    Nprod = (remaining_array.shape[0] + 1)
-    Nuser = user_array.shape[0]
-    return np.full(Nuser, 1.0/Nprod)
-
-def linear_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
-    ''' 
-        content_vector : shape is (dimension,)
-        remaining_array: shape in (N_producers - 1, dimension)
-        user_array: shape is (N_users, dimension)
-        Returns
-            numpy array of shape (N_user,), linear proabibility of each user getting recommended to `content_vector` (the producer who sets their vector)  
-    '''
-    product = user_array @ np.vstack((remaining_array, content_vector)).T # has shape N_user x N_prod, product_ij stores what user i rates producer j
-    prob =  product / product.sum(axis=1)[:,None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
-    return prob[:, -1] #prob_ij contains with what probability user i is recommended movie j; last column will have all probabilities of users going to content_vector
-
-def linear_probability_torch(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1) -> torch.Tensor:
-    """ 
-    Calculate the linear probability of each user being recommended to `content_vector`.
-    
-    Args:
-        content_vector: Tensor of shape (dimension,).
-        remaining_array: Tensor of shape (N_producers - 1, dimension).
-        user_array: Tensor of shape (N_users, dimension).
-        temp: A placeholder argument for compatibility, not used here.
-
-    Returns:
-        Tensor of shape (N_users,), containing the probabilities of each user being recommended to `content_vector`.
-    """
-    all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
-    product = torch.matmul(user_array, all_producers.T)  # Shape: (N_users, N_producers)
-    prob = product / product.sum(dim=1, keepdim=True)  # Shape: (N_users, N_producers)
-    return prob[:, -1]  # Shape: (N_users,)
-
-def softmax_probability(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray:
-    '''
-        content_vector : shape is (dimension,)
-        remaining_array: shape in (N_producers - 1, dimension)
-        user_array: shape is (N_users, dimension)
-        temp: temperature for softmax, default = 1
-        Returns
-            numpy array of shape (N_user,), softmax proabibility of each user getting recommended to content_vector   
-    '''
-    product = np.exp((user_array @ np.vstack((remaining_array, content_vector)).T) / temp) # has shape N_user x N_prod, # TODO temperature added
-    prob = product / product.sum(axis=1)[:, None] # the [:, None] just reshapes the product.sum to (N_users, 1) for broadcast division
-    return prob[:, -1]
-
-
-def softmax_probability_torch(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1) -> torch.Tensor:
-    """
-    Calculate the softmax probability of each user being recommended to `content_vector`.
-
-    Args:
-        content_vector: Tensor of shape (dimension,).
-        remaining_array: Tensor of shape (N_producers - 1, dimension).
-        user_array: Tensor of shape (N_users, dimension).
-        temp: Temperature for softmax, default = 1.
-
-    Returns:
-        Tensor of shape (N_users,), containing the probabilities of each user being recommended to `content_vector`.
-    """
-    all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
-    product = torch.matmul(user_array, all_producers.T) / temp # Shape: (N_users, N_producers) 
-    prob = torch.softmax(product, dim=1)  # Shape: (N_users, N_producers)
-    return prob[:, -1]  # Shape: (N_users,)
-
-def topk_softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1, k: int = 5) -> torch.Tensor:
-    """
-    Calculate the softmax probability over the top-k producers, including `content_vector`.
-
-    Args:
-        content_vector: Tensor of shape (dimension,).
-        remaining_array: Tensor of shape (N_producers - 1, dimension).
-        user_array: Tensor of shape (N_users, dimension).
-        temp: Temperature for softmax, default = 1.
-        k: Number of top producers to consider for the softmax calculation.
-
-    Returns:
-        Tensor of shape (N_users,), containing the top-k softmax probabilities of each user being recommended to `content_vector`.
-    """
-    all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
-    product = torch.matmul(user_array, all_producers.T) / temp  # Shape: (N_users, N_producers)
-    topk_scores, topk_indices = torch.topk(product, k=k, dim=1)  # Shape: (N_users, k), # Extract top-k scores and their indices for each user
-    topk_prob = torch.softmax(topk_scores, dim=1)  # Shape: (N_users, k)
-
-    # Identify the index of `content_vector` in top-k indices
-    content_index = all_producers.size(0) - 1  # Last index corresponds to content_vector
-    is_content_in_topk = (topk_indices == content_index)  # Shape: (N_users, k), atmost one value in the row can be True
-    
-    # Sum probabilities where `content_vector` is in top-k
-    prob_for_content = (topk_prob * is_content_in_topk).sum(dim=1)  # Shape: (N_users,)
-    
-    return prob_for_content
-
-
 def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:np.ndarray) -> float:
     '''
         Computes engagement utility for the content_vector
@@ -139,7 +36,18 @@ def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:n
     prods = user_array @ content_vector # what each user rates the content_vector shape (N_user,)
     return np.sum(probs * prods)
 
-def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
+def exposure_utility(probs:np.ndarray) -> float:
+    '''
+        Computes exposure utility for the content_vector
+        Parameters:
+            probs: shape is (N_users,) i^th entry denotes the probability that user i goes to this producer (which has `content vector` embedding)
+                this must be precomputed - it could be linear, softmax, random probability
+    
+    This function already assumed the probs are precomputed (could be linear, softmax, random...)
+    '''
+    return np.sum(probs)
+
+def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO needs prob of user going to  every producer
     '''
         Given the producer strategies and user array return the (engagement) utilities for producer and users.
 
@@ -171,18 +79,11 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
     return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
-def exposure_utility(probs:np.ndarray) -> float:
-    '''
-        Computes exposure utility for the content_vector
-        Parameters:
-            probs: shape is (N_users,) i^th entry denotes the probability that user i goes to this producer (which has `content vector` embedding)
-                this must be precomputed - it could be linear, softmax, random probability
-    
-    This function already assumed the probs are precomputed (could be linear, softmax, random...)
-    '''
-    return np.sum(probs)
+def get_all_engagement_utilities_refac(): # TORC impelemntation
+    # TODO torch version
 
-def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
+
+def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO change
     '''
         Given the producer strategies and user array return the exposure utility for producer, engagement utility for users
 
@@ -252,22 +153,24 @@ class ProducersEngagementGame:
         Each producer's strategy space is the ball of L1 norm <= 1, restricted to positive orthant
         Goal of each producer is to maximize its engagament
     '''
-    def __init__(self, num_producers:int, users:Users, prob = 'linear', temp = 1):
+    def __init__(self, num_producers:int, users:Users, probability:Probability, temp = 1): # TODO Refactor to have probability object passed in
         self.num_producers = num_producers
         self.dimension = users.dimension
         self.users = users
+        self.probability = probability
         self.BR_dyna_NE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
-        self.BruteForce_NE = set() # Nash equilibria arising from brute force vertex search, stores tuples with (n_1...n_d) # of producers in each direction
-        self.temp = temp #temperature
-        self.prob_str = prob
-        if self.prob_str == 'linear':
-            self.probability_function = linear_probability
-        elif self.prob_str == 'softmax':
-            self.probability_function = softmax_probability
-        elif self.prob_str == 'random':
-            self.probability_function = random_probability
-        else:
-            raise NotImplementedError
+        # self.BruteForce_NE = set() # Nash equilibria arising from brute force vertex search, stores tuples with (n_1...n_d) # of producers in each direction
+        # self.temp = temp #temperature
+        # self.prob_str = prob
+        # if self.prob_str == 'linear':
+        #     self.probability_function = linear_probability
+        # elif self.prob_str == 'softmax':
+        #     self.probability_function = softmax_probability
+        # elif self.prob_str == 'random':
+        #     self.probability_function = random_probability
+        # else:
+        #     raise NotImplementedError
+
     
     def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> np.ndarray:
         '''
@@ -280,10 +183,11 @@ class ProducersEngagementGame:
                 searching amongst positive basis vectors is sufficient 
                 due to properties of engagement utility
         '''
-        max_util = engagement_utility(current_vec, self.probability_function(current_vec, remaining_array, self.users.user_array, temp = self.temp),  self.users.user_array)
+        current_prob = self.probability.get_probability(current_vec, remaining_array, self.users.user_array)
+        max_util = engagement_utility(current_vec, current_prob, self.users.user_array) # actually the current utility with current_vec
         best_row = current_vec # setting best_row and max utility as what the current vector gives
         for row in np.eye(self.dimension):
-            probs = self.probability_function(row, remaining_array, self.users.user_array, temp=self.temp)
+            probs = self.probability.get_probability(row, remaining_array, self.users.user_array)
             util = engagement_utility(row, probs, self.users.user_array)
             if util > max_util:
                 best_row = row
@@ -341,29 +245,29 @@ class ProducersEngagementGame:
             return converged, producers, np.sum(producers, axis=0), i, tot_utilarr
         return converged, producers, np.sum(producers, axis=0), i 
         
-    def brute_force_NEsearch(self):
-        '''
-            Searches all (permutationally invariant) combinations
-            and check if it's a NE
-            Slow
-        '''
-        def equivalent_combinations(combinations): 
-            '''
-                returns a set of tuples, permutationally invariant ones of combinations, by sorting
-            '''
-            s = set()
-            for c in combinations:
-                s.add(tuple(sorted(c)))
-            return s
-        combinations = np.array(np.meshgrid(*[np.arange(self.dimension) for i in range(self.num_producers)])).T.reshape(-1, self.num_producers) # shape [d^(#producers), #producers]
-        eq_comb = equivalent_combinations(combinations) # set of tuples
-        I = np.eye(self.dimension)
-        for comb in eq_comb:
-            producers = I[list(comb)] #shape (N_producers, dimension)
-            _ , is_NE =  self.find_update_best_response(producers)
-            if is_NE:
-                self.BruteForce_NE.add(tuple(np.sum(producers, axis = 0))) # adds producer profile, # of producers in each direction to set of NE
-        return self.BruteForce_NE
+    # def brute_force_NEsearch(self):
+    #     '''
+    #         Searches all (permutationally invariant) combinations
+    #         and check if it's a NE
+    #         Slow
+    #     '''
+    #     def equivalent_combinations(combinations): 
+    #         '''
+    #             returns a set of tuples, permutationally invariant ones of combinations, by sorting
+    #         '''
+    #         s = set()
+    #         for c in combinations:
+    #             s.add(tuple(sorted(c)))
+    #         return s
+    #     combinations = np.array(np.meshgrid(*[np.arange(self.dimension) for i in range(self.num_producers)])).T.reshape(-1, self.num_producers) # shape [d^(#producers), #producers]
+    #     eq_comb = equivalent_combinations(combinations) # set of tuples
+    #     I = np.eye(self.dimension)
+    #     for comb in eq_comb:
+    #         producers = I[list(comb)] #shape (N_producers, dimension)
+    #         _ , is_NE =  self.find_update_best_response(producers)
+    #         if is_NE:
+    #             self.BruteForce_NE.add(tuple(np.sum(producers, axis = 0))) # adds producer profile, # of producers in each direction to set of NE
+    #     return self.BruteForce_NE
 
 
 

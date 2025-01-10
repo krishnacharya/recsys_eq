@@ -11,8 +11,11 @@ def main():
     parser.add_argument('--common_config', type=str, default = 'common_config', help='Path to the common config file')
     parser.add_argument('--nusers', type = int, default = 10000, help = 'number of users, used in synthetic data generation')
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
-    parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
-    parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter')
+    
+    parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax, linear, topk_softmax, random')
+    parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter, default is standard sm')
+    parser.add_argument('--topk', type = float, default = 1, help = 'Top k producers, default is a greedy pick')
+
     parser.add_argument('--spfrac', type=float, default=0.9, help='Sparsity fraction for synth sparse datasets')
     parser.add_argument('--exp_seed', type = int, default = 505, help = 'Seed for experiment')
     parser.add_argument('--emb_seed', type = int, help = 'Embedding seed')
@@ -39,15 +42,17 @@ def main():
     else:
         raise NotImplementedError
     
-    if args.prob not in ['random', 'linear', 'softmax']:
+    if args.prob not in ['random', 'linear', 'softmax', 'topk_softmax']:
         raise NotImplementedError
     
     print(f'Temperature is {args.temperature}')
+    print(f'Top k is {args.topk}')
     
     if 'sparse-' not in args.data:
         final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}'
     else:
         final_dir = args.save_dir + f'{args.data}{args.spfrac}_{args.prob}_temp_{args.temperature}'
+
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'
     run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \
