@@ -22,7 +22,6 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
     res = []
     with tqdm(total = tot, mininterval = 600) as pbar:
         for d in dimensions:
-            # emb_obj = Embedding(seed = emb_seed, dimension = d, num_users = n_users) #now we use saved embeddings for movielens
             nue = emb_obj.get_nue(seed = emb_seed, dimension = d)
             user_dist = nue.sum(axis = 0) / nue.sum() # denominator will have the number of numbers, since each row is L1 normalized
             for nprod in n_prodarr:
@@ -30,7 +29,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                     'emb_seed': emb_seed,
                     'nprod': nprod
                     }
-                PEng = ProducersEngagementGame(num_producers = nprod, users = Users(nue), prob = prob, temp = temp)
+                PEng = ProducersEngagementGame(num_producers = nprod, users = Users(nue), prob = prob, temp = temp) # add probability object
                 converged, last_profile, last_profile_compact, iters =  PEng.best_response_dynamics(verbose=False)
                 di['NE_exists'] = converged
                 di['iters'] = iters
@@ -38,7 +37,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                 di['producer_dist'] = last_profile_compact / nprod
                 di['user_dist'] = user_dist
                 if converged:
-                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)
+                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)  # add probability object
                     di.update({
                     'total_prod_util': prod_utils.sum(),
                     'avg_prod_util': prod_utils.mean(),
@@ -51,7 +50,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                     'min_user_util': user_utils.min(),
                     })
                 else:
-                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)
+                    dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, prob_type = prob, temp = temp)  # add probability object
                     di.update({
                     'total_prod_util': prod_utils.sum(),
                     'avg_prod_util': prod_utils.mean(),
