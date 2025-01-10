@@ -1,3 +1,4 @@
+
 class Probability:
     def __init__(self, prob_str='linear', temp=1.0, topk=5):
         # Store configuration for the probability function
