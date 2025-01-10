@@ -1,7 +1,7 @@
-from Users import * # A basic Users class
+from game.Users import * # A basic Users class
 import numpy as np
 import torch
-from ServingProbability import Probability
+from game.ServingProbability import Probability
 
 # def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, int, np.ndarray]: # TODO round robin
 #     '''
@@ -89,7 +89,7 @@ def get_all_engagement_utilities(producers:torch.Tensor, user_array:torch.Tensor
     utility = prob.get_probability(producers[-1], producers[:-1], user_array) * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
     return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
-def exposure_utility(probs:np.ndarray) -> float:
+def exposure_utility(probs:np.ndarray) -> float: # TODO torchify
     '''
         Computes exposure utility for the content_vector
         Parameters:
@@ -100,7 +100,7 @@ def exposure_utility(probs:np.ndarray) -> float:
     '''
     return np.sum(probs)
 
-def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO change
+def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO torchify
     '''
         Given the producer strategies and user array return the exposure utility for producer, engagement utility for users
 
@@ -176,7 +176,7 @@ class ProducersEngagementGame:
         current_prob = self.probability.get_probability(current_vec, remaining_array, self.users.user_array)[:,-1] # last column is for current_vec producer probabilities of serving to user
         max_util = engagement_utility(current_vec, current_prob, self.users.user_array) # actually the current utility with current_vec
         best_row = current_vec # setting best_row and max utility as what the current vector gives
-        for row in np.eye(self.dimension):
+        for row in torch.eye(self.dimension):
             probs = self.probability.get_probability(row, remaining_array, self.users.user_array)[:,-1]
             util = engagement_utility(row, probs, self.users.user_array)
             if util > max_util:
@@ -255,8 +255,6 @@ class ProducersEngagementGame:
             return converged, producers, producers.sum(dim=0), i, tot_utilarr
         return converged, producers, producers.sum(dim=0), i
 
-
-    
     # def best_response_dynamics(self, max_iter = 200, verbose = False):
     #     '''
     #         Single run of best response dynamics starting from random +ve basis vectors for each producer

@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 class Probability:
     def __init__(self, prob_str='linear', temp=1.0, topk=5):

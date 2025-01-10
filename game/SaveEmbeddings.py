@@ -1,4 +1,3 @@
-import surprise
 from surprise import Dataset, Reader
 from surprise import NMF
 from surprise.model_selection import cross_validate

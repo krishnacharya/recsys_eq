@@ -5,6 +5,8 @@ import pandas as pd
 from Users import Users
 from Producers import *
 from Embeddings import *
+import torch
+import numpy as np
 
 def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:list, emb_obj:Embedding, \
                     prob:str, temp:float, n_users:int, save_dest:str, experiment_seed = 505): # engagement game
@@ -17,7 +19,8 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
         temp: temperature, won't be used in linear
         n_users: number of users
     '''
-    np.random.seed(seed = experiment_seed) # TODO this can be made an argparsed variable
+    np.random.seed(seed = experiment_seed)
+    torch.manual_seed(experiment_seed)
     tot = len(dimensions) * len(n_prodarr)
     res = []
     with tqdm(total = tot, mininterval = 600) as pbar:
