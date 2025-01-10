@@ -36,18 +36,7 @@ def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:n
     prods = user_array @ content_vector # what each user rates the content_vector shape (N_user,)
     return np.sum(probs * prods)
 
-def exposure_utility(probs:np.ndarray) -> float:
-    '''
-        Computes exposure utility for the content_vector
-        Parameters:
-            probs: shape is (N_users,) i^th entry denotes the probability that user i goes to this producer (which has `content vector` embedding)
-                this must be precomputed - it could be linear, softmax, random probability
-    
-    This function already assumed the probs are precomputed (could be linear, softmax, random...)
-    '''
-    return np.sum(probs)
-
-def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO needs prob of user going to  every producer
+def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
     '''
         Given the producer strategies and user array return the (engagement) utilities for producer and users.
 
@@ -79,9 +68,16 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
     return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
-def get_all_engagement_utilities_refac(): # TORC impelemntation
-    # TODO torch version
-
+def exposure_utility(probs:np.ndarray) -> float:
+    '''
+        Computes exposure utility for the content_vector
+        Parameters:
+            probs: shape is (N_users,) i^th entry denotes the probability that user i goes to this producer (which has `content vector` embedding)
+                this must be precomputed - it could be linear, softmax, random probability
+    
+    This function already assumed the probs are precomputed (could be linear, softmax, random...)
+    '''
+    return np.sum(probs)
 
 def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1): # TODO change
     '''
@@ -113,22 +109,6 @@ def get_all_exposure_utilities(producers:np.ndarray, user_array:np.ndarray, prob
         raise NotImplementedError
     utility = prob * ratings # engagement utility, shape Nuser, Nprod
     return dir_producers, prob.sum(axis=0), utility.sum(axis=1)
-    
-# def producer_exposure_utility_linearserving(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray) -> float:
-#     '''
-#         Get the exposure utility for content_vector producer assuming rest producers are frozen to remaning array
-#         Used for exposure game class
-
-#         Skip for now, is for exposure
-#     '''
-#     return np.sum(linear_probability(content_vector, remaining_array, user_array))
-
-# def producer_exposure_utility_softmaxserving(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray) -> float:
-#     '''        
-#         Get the exposure utility for content_vector producer assuming rest producers are frozen to remaning array
-#         Used for producer softmax exposure game class
-#     '''
-#     return np.sum(softmax_probability(content_vector, remaining_array, user_array))
 
 # def get_softmax_prodexposure_usereng_utilities(producers:np.ndarray, user_array:np.ndarray):
 #     '''
@@ -233,7 +213,7 @@ class ProducersEngagementGame:
             producers, converged = self.find_update_best_response(producers)
             if verbose: # for diagonizing
                 print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
-                _, prod_util, _ = get_all_engagement_utilities(producers,self.users.user_array, prob_type=self.prob_str, temp = self.temp)
+                _, prod_util, _ = get_all_engagement_utilities(producers,self.users.user_array, prob_type=self.prob_str, temp = self.temp) # TODO change
                 tot_utilarr.append(prod_util.sum())
                 print('Total utility', tot_utilarr[-1])
                 print('Producer utilities', prod_util)
@@ -271,7 +251,7 @@ class ProducersEngagementGame:
 
 
 
-class ProducersExpsoureGame:
+class ProducersExpsoureGame: # TODO change here too for prob object!
     def __init__(self, num_producers:int, users:Users, prob = 'linear', temp = 1):
         self.num_producers = num_producers
         self.dimension = users.dimension
