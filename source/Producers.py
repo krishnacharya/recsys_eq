@@ -3,24 +3,24 @@ import numpy as np
 import torch
 from ServingProbability import Probability
 
-def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, int, np.ndarray]:
-    '''
-        p_i(c_k) = 1/num_prod, probability of user going to producer is uniform
-        thus the utility for producer i is 1/num_prod * (\sum_k=1^num users <s_i, c_k>)
-        it is best for each prodcuer to play cordinate maximizer of \sum_k=1^numuser c_k
+# def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, int, np.ndarray]: # TODO round robin
+#     '''
+#         p_i(c_k) = 1/num_prod, probability of user going to producer is uniform
+#         thus the utility for producer i is 1/num_prod * (\sum_k=1^num users <s_i, c_k>)
+#         it is best for each prodcuer to play cordinate maximizer of \sum_k=1^numuser c_k
 
-        user_array is shape N_users x dimension
+#         user_array is shape N_users x dimension
 
-        Note all producers utilities and best index will be the same
-        returns 
-        engagement utility for each producer (same), 
-        best start index (in 0...d-1 for all the producers),
-        utility for each consumer k will just be 1/Nprod \sum_n=1^Nprod <c_k, best_strat> = c_k(best_strat index)
-    '''
-    ua_sum = user_array.sum(axis = 0)
-    best_strat_index = np.argmax(ua_sum)
-    max_cord_sum = ua_sum[best_strat_index]
-    return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
+#         Note all producers utilities and best index will be the same
+#         returns 
+#         engagement utility for each producer (same), 
+#         best start index (in 0...d-1 for all the producers),
+#         utility for each consumer k will just be 1/Nprod \sum_n=1^Nprod <c_k, best_strat> = c_k(best_strat index)
+#     '''
+#     ua_sum = user_array.sum(axis = 0)
+#     best_strat_index = np.argmax(ua_sum)
+#     max_cord_sum = ua_sum[best_strat_index]
+#     return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
 
 def engagement_utility(content_vector: torch.Tensor, probs: torch.Tensor, user_array: torch.Tensor) -> torch.Tensor:
     """
@@ -68,6 +68,25 @@ def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, pr
     else:
         raise NotImplementedError
     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
+    return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
+
+def get_all_engagement_utilities(producers:torch.Tensor, user_array:torch.Tensor, prob:Probability):
+    '''
+        Given the producer strategies and user array return the (engagement) utilities for producer and users.
+
+        producers: shape N_producers x dimension
+        user_array: shape N_users x dimension
+            Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
+        temp: temperature for softmax probability
+        Returns 
+            dir_producers direction of basis vector for each producer, shape (N_producers, )
+            *engagement* utility for each producer, shape (N_producers, )
+            *engagement* utility for each user, shape (N_users, )
+    '''
+    prodT = producers.T
+    ratings = torch.matmul(user_array, prodT)  # Shape: (N_users, N_producers)
+    dir_producers = torch.argmax(prodT, dim=0)
+    utility = prob.get_probability(producers[-1], producers[:-1], user_array) * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
     return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
 def exposure_utility(probs:np.ndarray) -> float:
@@ -164,6 +183,7 @@ class ProducersEngagementGame:
                 best_row = row
                 max_util = util
         return best_row
+
     def find_update_best_response(self, producers: torch.Tensor):
         """
         Args:
@@ -184,7 +204,7 @@ class ProducersEngagementGame:
                 producers[i] = br  # Update the current producer
                 return producers, False  # Not a Nash equilibrium
         return producers, True  # All producers are best responding
-            
+
     # def find_update_best_response(self, producers: torch.Tensor):
     #     '''
     #         producers: has shape (N_producers, dimension)
@@ -202,39 +222,78 @@ class ProducersEngagementGame:
     #             producers[i] = br
     #             return producers, False
     #     return producers, True
-    
-    def best_response_dynamics(self, max_iter = 500, verbose = False):
+    def best_response_dynamics(self, max_iter=200, verbose=False):
         '''
-            Single run of best response dynamics starting from random +ve basis vectors for each producer
-            Once we hit a Nash Equilibrium/or max_iterations stop
-            Returns 
-            (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done) 
-            converged is True if NE found, False if not
-            last_profile is the of shape (N_producers, dimension)
-            last_profile compact is the # of users along each basis vector shape (dimensions,) 
-            
-            if BR dynamics have converged then last_profile will be a NE!
-        '''
-        producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # shape N_prod x dimension, random basis vectors
-        if verbose: 
-            print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
-            tot_utilarr = []
+        Single run of best response dynamics starting from random +ve basis vectors for each producer.
+        Once we hit a Nash Equilibrium/or max_iterations, stop.
 
-        for i in range(max_iter):
-            producers, converged = self.find_update_best_response(producers)
-            if verbose: # for diagonizing
-                print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
-                _, prod_util, _ = get_all_engagement_utilities(producers,self.users.user_array, prob_type=self.prob_str, temp = self.temp) # TODO change
-                tot_utilarr.append(prod_util.sum())
-                print('Total utility', tot_utilarr[-1])
-                print('Producer utilities', prod_util)
-            if converged:
-                self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
-                return converged, producers, np.sum(producers, axis=0), i
-        # below for when BR dynamics do not converge
+        Returns:
+            (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done)
+            - converged: True if NE found, False if not.
+            - last_profile: Tensor of shape (N_producers, dimension).
+            - last_profile_compact: Tensor of shape (dimensions,), # of users along each basis vector.
+            If BR dynamics have converged, last_profile will be a NE!
+        '''
+        producers = torch.eye(self.dimension)[torch.randint(0, self.dimension, (self.num_producers,))]  # Shape: (N_producers, dimension)
         if verbose:
-            return converged, producers, np.sum(producers, axis=0), i, tot_utilarr
-        return converged, producers, np.sum(producers, axis=0), i 
+            print(f"##### PRODUCERS FOR ITER 0\n {producers.sum(dim=0)}") # weight on each dimension
+            tot_utilarr = []
+        for i in range(max_iter):
+            producers, converged = self.find_update_best_response(producers)# Update producers and check for convergence
+            if verbose:
+                print(f"##### PRODUCERS FOR ITER {i} \n {producers.sum(dim=0)}")
+
+                _, prod_util, _ = get_all_engagement_utilities(
+                        producers, self.users.user_array, prob_type=self.prob_str, temp=self.temp
+                )  # TODO Ensure this utility function supports torch
+
+                tot_utilarr.append(prod_util.sum().item())  # Store total utility for diagnostics
+                print('Total utility:', tot_utilarr[-1])
+                print('Producer utilities:', prod_util)
+            if converged:
+                self.BR_dyna_NE.add(tuple(producers.sum(dim=0).tolist()))  # Save NE in a set
+                return converged, producers, producers.sum(dim=0), i
+
+        # When BR dynamics do not converge
+        if verbose:
+            return converged, producers, producers.sum(dim=0), i, tot_utilarr
+
+        return converged, producers, producers.sum(dim=0), i
+
+
+    
+    # def best_response_dynamics(self, max_iter = 200, verbose = False):
+    #     '''
+    #         Single run of best response dynamics starting from random +ve basis vectors for each producer
+    #         Once we hit a Nash Equilibrium/or max_iterations stop
+    #         Returns 
+    #         (converged, last_profile, last_profile_compact, # of iterations of BR dynamics done) 
+    #         converged is True if NE found, False if not
+    #         last_profile is the of shape (N_producers, dimension)
+    #         last_profile compact is the # of users along each basis vector shape (dimensions,) 
+            
+    #         if BR dynamics have converged then last_profile will be a NE!
+    #     '''
+    #     producers = np.eye(self.dimension)[np.random.choice(self.dimension, self.num_producers)] # shape N_prod x dimension, random basis vectors
+    #     if verbose: 
+    #         print(f'##### PRODUCERS FOR ITER 0\n {producers.sum(axis=0)}')
+    #         tot_utilarr = []
+
+    #     for i in range(max_iter):
+    #         producers, converged = self.find_update_best_response(producers)
+    #         if verbose: # for diagonizing
+    #             print(f'##### PRODUCERS FOR ITER {i} \n {producers.sum(axis=0)}')
+    #             _, prod_util, _ = get_all_engagement_utilities(producers,self.users.user_array, prob_type=self.prob_str, temp = self.temp) # TODO change
+    #             tot_utilarr.append(prod_util.sum())
+    #             print('Total utility', tot_utilarr[-1])
+    #             print('Producer utilities', prod_util)
+    #         if converged:
+    #             self.BR_dyna_NE.add(tuple(np.sum(producers, axis=0)))
+    #             return converged, producers, np.sum(producers, axis=0), i
+    #     # below for when BR dynamics do not converge
+    #     if verbose:
+    #         return converged, producers, np.sum(producers, axis=0), i, tot_utilarr
+    #     return converged, producers, np.sum(producers, axis=0), i 
         
     # def brute_force_NEsearch(self):
     #     '''
