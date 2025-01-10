@@ -5,17 +5,14 @@ class Probability:
         # Store configuration for the probability function
         self.temp = temp
         self.topk = topk
-        
         self.probability_config = {
             'linear': {'needs_temp': False, 'needs_topk': False, 'func': linear_probability},
             'random': {'needs_temp': False, 'needs_topk': False, 'func': random_probability},
             'softmax': {'needs_temp': True, 'needs_topk': False, 'func': softmax_probability},
             'topk_softmax': {'needs_temp': True, 'needs_topk': True, 'func': topk_softmax_probability}
         }
-        
         if prob_str not in self.probability_config:
             raise ValueError(f"Unknown probability function type: {prob_str}")
-        
         self.probability_function = self.probability_config[prob_str]['func']
         self.needs_temp = self.probability_config[prob_str]['needs_temp']
         self.needs_topk = self.probability_config[prob_str]['needs_topk']
@@ -23,12 +20,10 @@ class Probability:
     def get_probability(self, content_vec, remaining_array, user_array):
         # Prepare arguments based on the function's needs
         args = [content_vec, remaining_array, user_array]
-        
         if self.needs_temp:
             args.append(self.temp)
         if self.needs_topk:
             args.append(self.topk)
-        
         return self.probability_function(*args)
 
 # TORCH versions below

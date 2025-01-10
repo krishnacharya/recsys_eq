@@ -38,37 +38,37 @@ def engagement_utility(content_vector: torch.Tensor, probs: torch.Tensor, user_a
     prods = torch.matmul(user_array, content_vector)  # Shape: (N_users,)
     return torch.sum(probs * prods)  # Engagement utility as a scalar
 
-def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
-    '''
-        Given the producer strategies and user array return the (engagement) utilities for producer and users.
+# def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
+#     '''
+#         Given the producer strategies and user array return the (engagement) utilities for producer and users.
 
-        producers: shape N_producers x dimension
-        user_array: shape N_users x dimension
-            Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
-        temp: temperature for softmax probability
-        Returns 
-            dir_producers direction of basis vector for each producer, shape (N_producers, )
-            *engagement* utility for each producer, shape (N_producers, )
-            *engagement* utility for each user, shape (N_users, )
-    '''
-    prodt = producers.T  # shape (dimension, N_prod)
-    dir_producers = np.argmax(prodt, axis=0)
-    ratings = user_array @ prodt # shape (N_user, N_prod) ratings ij has what user i rates producer j's content <c_i, s_j>
-    prob = None
-    Nprod = producers.shape[0]
-    Nuser = user_array.shape[0]
-    if prob_type == 'linear':
-        prob = ratings / ratings.sum(axis=1)[:, None] # prob_ij stores <c_i, s_j> / sum_k <c_i, s_k> 
-    elif prob_type == 'random':
-        prob = np.full((Nuser, Nprod), 1.0 / Nprod)
-    elif prob_type == 'softmax':
-        exp_ratings = np.exp(ratings / temp) # TODO temperature added
-        prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
-        # print("Get all eng utils", np.array_str(prob, precision=3, suppress_small=True))
-    else:
-        raise NotImplementedError
-    utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
-    return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
+#         producers: shape N_producers x dimension
+#         user_array: shape N_users x dimension
+#             Note: producers only contains basis vectors e.g [[(0,1,0..d wide), ..(1,0... d wide)... N_producers]]
+#         temp: temperature for softmax probability
+#         Returns 
+#             dir_producers direction of basis vector for each producer, shape (N_producers, )
+#             *engagement* utility for each producer, shape (N_producers, )
+#             *engagement* utility for each user, shape (N_users, )
+#     '''
+#     prodt = producers.T  # shape (dimension, N_prod)
+#     dir_producers = np.argmax(prodt, axis=0)
+#     ratings = user_array @ prodt # shape (N_user, N_prod) ratings ij has what user i rates producer j's content <c_i, s_j>
+#     prob = None
+#     Nprod = producers.shape[0]
+#     Nuser = user_array.shape[0]
+#     if prob_type == 'linear':
+#         prob = ratings / ratings.sum(axis=1)[:, None] # prob_ij stores <c_i, s_j> / sum_k <c_i, s_k> 
+#     elif prob_type == 'random':
+#         prob = np.full((Nuser, Nprod), 1.0 / Nprod)
+#     elif prob_type == 'softmax':
+#         exp_ratings = np.exp(ratings / temp) # TODO temperature added
+#         prob = exp_ratings / exp_ratings.sum(axis=1)[:, None] # prob_ij stores exp(<c_i, s_j>) / sum_k exp(<c_i, s_k>), prob that user i goes to producer j
+#         # print("Get all eng utils", np.array_str(prob, precision=3, suppress_small=True))
+#     else:
+#         raise NotImplementedError
+#     utility = prob * ratings # utility_ij = prob_ij * rating_ij, utility producer j gets from user i
+#     return dir_producers, utility.sum(axis=0), utility.sum(axis=1)
 
 def get_all_engagement_utilities(producers:torch.Tensor, user_array:torch.Tensor, prob:Probability):
     '''
@@ -154,7 +154,7 @@ class ProducersEngagementGame:
         Each producer's strategy space is the ball of L1 norm <= 1, restricted to positive orthant
         Goal of each producer is to maximize its engagament
     '''
-    def __init__(self, num_producers:int, users:Users, probability:Probability, temp = 1): # TODO Refactor to have probability object passed in
+    def __init__(self, num_producers:int, users:Users, probability:Probability):
         self.num_producers = num_producers
         self.dimension = users.dimension
         self.users = users
@@ -242,11 +242,7 @@ class ProducersEngagementGame:
             producers, converged = self.find_update_best_response(producers)# Update producers and check for convergence
             if verbose:
                 print(f"##### PRODUCERS FOR ITER {i} \n {producers.sum(dim=0)}")
-
-                _, prod_util, _ = get_all_engagement_utilities(
-                        producers, self.users.user_array, prob_type=self.prob_str, temp=self.temp
-                )  # TODO Ensure this utility function supports torch
-
+                _, prod_util, _ = get_all_engagement_utilities(producers, self.users.user_array, self.probability)
                 tot_utilarr.append(prod_util.sum().item())  # Store total utility for diagnostics
                 print('Total utility:', tot_utilarr[-1])
                 print('Producer utilities:', prod_util)
@@ -257,7 +253,6 @@ class ProducersEngagementGame:
         # When BR dynamics do not converge
         if verbose:
             return converged, producers, producers.sum(dim=0), i, tot_utilarr
-
         return converged, producers, producers.sum(dim=0), i
 
 
