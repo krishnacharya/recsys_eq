@@ -22,19 +22,21 @@ def random_rec_utilities(num_prod:int, user_array:np.ndarray) -> tuple[float, in
     max_cord_sum = ua_sum[best_strat_index]
     return max_cord_sum / num_prod, best_strat_index, user_array[:, best_strat_index]
 
-def engagement_utility(content_vector:np.ndarray, probs:np.ndarray, user_array:np.ndarray) -> float:
-    '''
-        Computes engagement utility for the content_vector
-        Parameters:
-            content_vector : shape is (dimension,)
-            probs: shape is (N_users,) i^th entry denotes the probability that user i goes to this producer (which has `content vector` embedding)
-                this must be precomputed - it could be linear or softmax probability
-            user_array: shape is (N_users, dimension)
-    
-    This function already assumed the probs are precomputed (could be linear, softmax ...)
-    '''
-    prods = user_array @ content_vector # what each user rates the content_vector shape (N_user,)
-    return np.sum(probs * prods)
+def engagement_utility(content_vector: torch.Tensor, probs: torch.Tensor, user_array: torch.Tensor) -> torch.Tensor:
+    """
+    Computes engagement utility for the content_vector.
+
+    Parameters:
+        content_vector: Tensor of shape (dimension,).
+        probs: Tensor of shape (N_users,). The i^th entry denotes the probability that user i engages with the producer (content_vector embedding).
+               This must be precomputed - it could be linear or softmax probability.
+        user_array: Tensor of shape (N_users, dimension).
+
+    Returns:
+        Engagement utility as a scalar Tensor.
+    """
+    prods = torch.matmul(user_array, content_vector)  # Shape: (N_users,)
+    return torch.sum(probs * prods)  # Engagement utility as a scalar
 
 def get_all_engagement_utilities(producers:np.ndarray, user_array:np.ndarray, prob_type='linear', temp = 1):
     '''
@@ -140,19 +142,8 @@ class ProducersEngagementGame:
         self.probability = probability
         self.BR_dyna_NE = set() # Nash equilibria arising from best response dynamics, stores tuples with (n_1...n_d) # of producers in each direction
         # self.BruteForce_NE = set() # Nash equilibria arising from brute force vertex search, stores tuples with (n_1...n_d) # of producers in each direction
-        # self.temp = temp #temperature
-        # self.prob_str = prob
-        # if self.prob_str == 'linear':
-        #     self.probability_function = linear_probability
-        # elif self.prob_str == 'softmax':
-        #     self.probability_function = softmax_probability
-        # elif self.prob_str == 'random':
-        #     self.probability_function = random_probability
-        # else:
-        #     raise NotImplementedError
 
-    
-    def get_best_response(self, current_vec: np.ndarray, remaining_array:np.ndarray) -> np.ndarray:
+    def get_best_response(self, current_vec: torch.Tensor, remaining_array:torch.Tensor) -> torch.Tensor:
         '''
             Best response for a producer, when all the other producers are frozen to remaining_array
             Parameters:
@@ -163,34 +154,54 @@ class ProducersEngagementGame:
                 searching amongst positive basis vectors is sufficient 
                 due to properties of engagement utility
         '''
-        current_prob = self.probability.get_probability(current_vec, remaining_array, self.users.user_array)
+        current_prob = self.probability.get_probability(current_vec, remaining_array, self.users.user_array)[:,-1] # last column is for current_vec producer probabilities of serving to user
         max_util = engagement_utility(current_vec, current_prob, self.users.user_array) # actually the current utility with current_vec
         best_row = current_vec # setting best_row and max utility as what the current vector gives
         for row in np.eye(self.dimension):
-            probs = self.probability.get_probability(row, remaining_array, self.users.user_array)
+            probs = self.probability.get_probability(row, remaining_array, self.users.user_array)[:,-1]
             util = engagement_utility(row, probs, self.users.user_array)
             if util > max_util:
                 best_row = row
                 max_util = util
         return best_row
-    
-    def find_update_best_response(self, producers: np.ndarray):
-        '''
-            producers: has shape (N_producers, dimension)
-            Returns
-                (producers, True) if the input itself is a Nash Equilibrium i.e. each producer is best responding
+    def find_update_best_response(self, producers: torch.Tensor):
+        """
+        Args:
+            producers: Tensor of shape (N_producers, dimension).
+        Returns:
+            Tuple:
+                - Updated producers tensor.
+                - Boolean indicating whether the input is a Nash Equilibrium.
+                (True if each producer is best responding, False otherwise).
+        Notes:
+            - The function modifies only one row of `producers` if a best response is found.
+            - Rows are checked in a random order.
+        """
+        for i in torch.randperm(self.num_producers).tolist():  # Randomly permute indices
+            remaining_array = producers[torch.arange(self.num_producers) != i]
+            br = self.get_best_response(producers[i], remaining_array)
+            if not torch.equal(producers[i], br):  # Found a best response
+                producers[i] = br  # Update the current producer
+                return producers, False  # Not a Nash equilibrium
+        return producers, True  # All producers are best responding
+            
+    # def find_update_best_response(self, producers: torch.Tensor):
+    #     '''
+    #         producers: has shape (N_producers, dimension)
+    #         Returns
+    #             (producers, True) if the input itself is a Nash Equilibrium i.e. each producer is best responding
                 
-                (producers updated, False) if the input is not a Nash equilibrium
-                producers updated differes from producers in exactly one row! 
-                the row in which we find 'a' best response.
-            Note: We search amongst indices randomly
-        '''
-        for i in np.random.permutation(self.num_producers): # random permutation of arange(self.num_producers)
-            br = self.get_best_response(producers[i], producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array
-            if not np.all(producers[i] == br): # found a best response, update and return
-                producers[i] = br
-                return producers, False
-        return producers, True
+    #             (producers updated, False) if the input is not a Nash equilibrium
+    #             producers updated differes from producers in exactly one row! 
+    #             the row in which we find 'a' best response.
+    #         Note: We search amongst indices randomly
+    #     '''
+    #     for i in np.random.permutation(self.num_producers): # random permutation of arange(self.num_producers)
+    #         br = self.get_best_response(producers[i], producers[(np.arange(self.num_producers) != i), :]) # picks rows other than i for remaining_array
+    #         if not np.all(producers[i] == br): # found a best response, update and return
+    #             producers[i] = br
+    #             return producers, False
+    #     return producers, True
     
     def best_response_dynamics(self, max_iter = 500, verbose = False):
         '''

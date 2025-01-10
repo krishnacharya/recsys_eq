@@ -1,3 +1,5 @@
+import torch
+
 class Probability:
     def __init__(self, prob_str='linear', temp=1.0, topk=5):
         # Store configuration for the probability function
@@ -30,7 +32,7 @@ class Probability:
         return self.probability_function(*args)
 
 # TORCH versions below
-def linear_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1) -> torch.Tensor:
+def linear_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor) -> torch.Tensor:
     """ 
     Calculate the linear probability of each user being recommended to `content_vector`.
     
@@ -41,14 +43,16 @@ def linear_probability(content_vector: torch.Tensor, remaining_array: torch.Tens
         temp: A placeholder argument for compatibility, not used here.
 
     Returns:
-        Tensor of shape (N_users,), containing the probabilities of each user being recommended to `content_vector`.
+        Tensor of shape (N_users, N_prod), containing the probabilities of each user being recommended to `content_vector`.
+        with the last column having the serving probability for producer with content vector
     """
     all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
     product = torch.matmul(user_array, all_producers.T)  # Shape: (N_users, N_producers)
     prob = product / product.sum(dim=1, keepdim=True)  # Shape: (N_users, N_producers)
-    return prob[:, -1]  # Shape: (N_users,)
+    return prob
 
-def softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1) -> torch.Tensor:
+def softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, 
+                        user_array: torch.Tensor, temp: float = 1) -> torch.Tensor:
     """
     Calculate the softmax probability of each user being recommended to `content_vector`.
 
@@ -59,14 +63,16 @@ def softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Ten
         temp: Temperature for softmax, default = 1.
 
     Returns:
-        Tensor of shape (N_users,), containing the probabilities of each user being recommended to `content_vector`.
+        Tensor of shape (N_users, N_prod), containing the probabilities of each user being recommended to `content_vector`.
+        with the last column having the serving probability for producer with content vector
     """
     all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
     product = torch.matmul(user_array, all_producers.T) / temp # Shape: (N_users, N_producers) 
     prob = torch.softmax(product, dim=1)  # Shape: (N_users, N_producers)
-    return prob[:, -1]  # Shape: (N_users,)
+    return prob # Shape: (N_users,)
 
-def topk_softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor, temp: float = 1, k: int = 5) -> torch.Tensor:
+def topk_softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, \
+                            user_array: torch.Tensor, temp: float = 1, k: int = 1) -> torch.Tensor:
     """
     Calculate the softmax probability over the top-k producers, including `content_vector`.
 
@@ -75,22 +81,52 @@ def topk_softmax_probability(content_vector: torch.Tensor, remaining_array: torc
         remaining_array: Tensor of shape (N_producers - 1, dimension).
         user_array: Tensor of shape (N_users, dimension).
         temp: Temperature for softmax, default = 1.
-        k: Number of top producers to consider for the softmax calculation.
+        k: Number of top producers to consider for the softmax calculation, default is greedy k = 1
 
     Returns:
-        Tensor of shape (N_users,), containing the top-k softmax probabilities of each user being recommended to `content_vector`.
+        Tensor of shape (N_users, N_prod), containing the probabilities of each user being recommended to `content_vector`.
+        with the last column having the serving probability for producer with content vector
     """
     all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
     product = torch.matmul(user_array, all_producers.T) / temp  # Shape: (N_users, N_producers)
-    topk_scores, topk_indices = torch.topk(product, k=k, dim=1)  # Shape: (N_users, k), # Extract top-k scores and their indices for each user
+    topk_scores, topk_indices = torch.topk(product, k=k, dim=1)  # Shape: (N_users, k)
     topk_prob = torch.softmax(topk_scores, dim=1)  # Shape: (N_users, k)
-    # Identify the index of `content_vector` in top-k indices
-    content_index = all_producers.size(0) - 1  # Last index corresponds to content_vector
-    is_content_in_topk = (topk_indices == content_index)  # Shape: (N_users, k), atmost one value in the row can be True
-    # Sum probabilities where `content_vector` is in top-k
-    prob_for_content = (topk_prob * is_content_in_topk).sum(dim=1)  # Shape: (N_users,)
-    return prob_for_content
+    final_prob = torch.zeros_like(product)  # Shape: (N_users, N_producers)
+    # Vectorized assignment
+    user_indices = torch.arange(product.shape[0]).unsqueeze(1).expand_as(topk_indices)  # Shape: (N_users, k)
+    final_prob[user_indices, topk_indices] = topk_prob
+    return final_prob
 
+def random_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, user_array: torch.Tensor):
+    Nprod = (remaining_array.shape[0] + 1)
+    Nuser = user_array.shape[0]
+    return torch.full((Nuser, Nprod), 1.0 / Nprod)
+
+
+# def topk_softmax_probability(content_vector: torch.Tensor, remaining_array: torch.Tensor, \
+#                             user_array: torch.Tensor, temp: float = 1, k: int = 5) -> torch.Tensor:
+#     """
+#     Calculate the softmax probability over the top-k producers, including `content_vector`.
+
+#     Args:
+#         content_vector: Tensor of shape (dimension,).
+#         remaining_array: Tensor of shape (N_producers - 1, dimension).
+#         user_array: Tensor of shape (N_users, dimension).
+#         temp: Temperature for softmax, default = 1.
+#         k: Number of top producers to consider for the softmax calculation.
+#     Returns:
+#         Tensor of shape (N_users, N_producers) 
+#     """
+#     all_producers = torch.vstack((remaining_array, content_vector))  # Shape: (N_producers, dimension)
+#     product = torch.matmul(user_array, all_producers.T) / temp  # Shape: (N_users, N_producers)
+#     topk_scores, topk_indices = torch.topk(product, k=k, dim=1)  # Shape: (N_users, k), # Extract top-k scores and their indices for each user
+#     topk_prob = torch.softmax(topk_scores, dim=1)  # Shape: (N_users, k)
+#     # Identify the index of `content_vector` in top-k indices
+#     content_index = all_producers.size(0) - 1  # Last index corresponds to content_vector
+#     is_content_in_topk = (topk_indices == content_index)  # Shape: (N_users, k), atmost one value in the row can be True
+#     # Sum probabilities where `content_vector` is in top-k
+#     prob_for_content = (topk_prob * is_content_in_topk).sum(dim=1)  # Shape: (N_users,)
+#     return prob_for_content
 
 # Numpy versions below
 def random_probability_np(content_vector:np.ndarray, remaining_array:np.ndarray, user_array:np.ndarray, temp = 1)->np.ndarray: # hacky fix for now, adding temp here which is to make function arguments similar to softmax_probability
