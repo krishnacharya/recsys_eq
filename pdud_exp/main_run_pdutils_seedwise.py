@@ -15,7 +15,7 @@ def main():
     
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax, linear, topk_softmax, random')
     parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter, default is standard sm')
-    parser.add_argument('--topk', type = float, default = 1, help = 'Top k producers, default is a greedy pick')
+    parser.add_argument('--topk', type = int, default = 1, help = 'Top k producers, default is a greedy pick')
 
     parser.add_argument('--spfrac', type=float, default=0.9, help='Sparsity fraction for synth sparse datasets')
     parser.add_argument('--exp_seed', type = int, default = 505, help = 'Seed for experiment')
@@ -50,9 +50,9 @@ def main():
     print(f'Top k is {args.topk}')
     
     if 'sparse-' not in args.data:
-        final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}'
+        final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}_topk_{args.topk}'
     else:
-        final_dir = args.save_dir + f'{args.data}{args.spfrac}_{args.prob}_temp_{args.temperature}'
+        final_dir = args.save_dir + f'{args.data}{args.spfrac}_{args.prob}_temp_{args.temperature}_topk_{args.topk}'
 
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'

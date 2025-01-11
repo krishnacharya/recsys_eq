@@ -28,7 +28,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
         for d in dimensions:
             nue = emb_obj.get_nue(seed = emb_seed, dimension = d)
             user_dist = nue.sum(axis = 0) / nue.sum() # denominator will have the number of numbers, since each row is L1 normalized
-            for nprod in n_prodarr:
+            for nprod in n_prodarr: # todo add topk condition check here
                 di = {'dimension': d,
                     'emb_seed': emb_seed,
                     'nprod': nprod
