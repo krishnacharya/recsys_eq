@@ -9,8 +9,8 @@ import numpy as np
 
 def main():
     d, emb_seed = 10, 17
-    nprod = 100
-    k = 1
+    nprod = 5
+    k = 10
     temp = 1
     emb_obj =  Movielens_100k_Embedding()
     probability = Probability(prob_str='topk_softmax', temp=temp, topk=k)
