@@ -1,0 +1,65 @@
+# import sys
+# sys.path.append('../source/')
+import argparse
+from utils.helper import load_config
+from game.Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
+from game.ServingProbability import Probability
+from pdud_exp.run import run_producer_game_singleseedsave
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser(description='get experiment configs')
+    parser.add_argument('--common_config', type=str, default = 'common_config', help='Path to the common config file')
+    parser.add_argument('--nusers', type = int, default = 10000, help = 'number of users, used in synthetic data generation')
+    parser.add_argument('--data', type = str, help='Name of the data you want to use')
+    
+    parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax, linear, topk_softmax, random')
+    parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter, default is standard sm')
+    parser.add_argument('--topk', type = float, default = 1, help = 'Top k producers, default is a greedy pick')
+
+    parser.add_argument('--spfrac', type=float, default=0.9, help='Sparsity fraction for synth sparse datasets')
+    parser.add_argument('--exp_seed', type = int, default = 505, help = 'Seed for experiment')
+    parser.add_argument('--emb_seed', type = int, help = 'Embedding seed')
+    parser.add_argument('--runnum', type = str, help = 'run number, each run is of BR dynamics for a given dim, number of producers, nusers')
+    parser.add_argument('--save_dir', type = str, default = '../saved_frames_eng/', help= 'directory in which to store the generated dataframe for utility, NE')
+    args = parser.parse_args()
+
+    
+    common_config = load_config('../configs/'+str(args.common_config)+'.yml') # dictionary with common seeds, dimension, nprods
+    if args.data == 'synth-uniform':
+        emb_obj = Synth_Uniform_Embedding() # assigning class name
+    elif args.data == 'synth-skewed':
+        emb_obj = Synth_Skewed_Embedding()
+    elif args.data == 'movielens-100k':
+        emb_obj = Movielens_100k_Embedding()
+    elif args.data == 'rentrunway':
+        emb_obj = RentRunway_Embedding()
+    elif args.data == 'amznmusic':
+        emb_obj = AmazonMusic_Embedding()
+    elif args.data == 'sparse-unif':
+        emb_obj = SparseUni(spfrac=args.spfrac)
+    elif args.data == 'sparse-skew':
+        emb_obj = SparseSkew(spfrac=args.spfrac)
+    else:
+        raise NotImplementedError
+    
+    if args.prob not in ['random', 'linear', 'softmax', 'topk_softmax']:
+        raise NotImplementedError
+    
+    print(f'Temperature is {args.temperature}')
+    print(f'Top k is {args.topk}')
+    
+    if 'sparse-' not in args.data:
+        final_dir = args.save_dir + f'{args.data}_{args.prob}_temp_{args.temperature}'
+    else:
+        final_dir = args.save_dir + f'{args.data}{args.spfrac}_{args.prob}_temp_{args.temperature}'
+
+    Path(final_dir).mkdir(parents=True, exist_ok=True)
+    final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'
+    
+    probability = Probability(prob_str = args.prob, temp=1.0, topk=args.topk)
+    run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \
+                    emb_obj, probability, args.temperature, args.nusers, final_dest, args.exp_seed)
+
+if __name__ == '__main__':
+    main()

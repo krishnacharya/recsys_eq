@@ -19,5 +19,12 @@ prob=$(echo ${iteration} | cut -d "," -f 2)
 temp=$(echo ${iteration} | cut -d "," -f 3)
 embseed=$(echo ${iteration} | cut -d "," -f 4)
 cc="config_seedproddim_dim100"
+save_dir="../saved_frames_engtorch"
 
-python main_run_pdutils_seedwise.py --data ${data} --prob ${prob} --temp ${temp} --common_config ${cc} --emb_seed ${embseed}
+python main_run_pdutils_seedwise.py \
+    --save_dir ${savedir}
+    --data ${data} \
+    --prob ${prob} \
+    --temp ${temp} \
+    --common_config ${cc} \
+    --emb_seed ${embseed}

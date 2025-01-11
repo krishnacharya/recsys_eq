@@ -1,5 +1,3 @@
-# import sys
-# sys.path.append('../source/')
 from tqdm import tqdm
 import pandas as pd
 from game.Users import Users
@@ -38,5 +36,6 @@ def main():
         'max_user_util': user_utils.max().item(),
         'min_user_util': user_utils.min().item(),
         })
+    print(di)
 
 main()
