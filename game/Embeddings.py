@@ -6,7 +6,7 @@ from sklearn.preprocessing import normalize
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
-from utils.project_dirs import emb_dataset_alg
+from utils.project_dirs import emb_dataset_alg, emb_dataset
 
 # def generate_uniform_user(dimension) -> np.array:
 #     '''
@@ -32,13 +32,15 @@ class Embedding(ABC):
 # Synthetic
 class Synth_Uniform_Embedding(Embedding):
     def get_nue(self, seed, dimension):
-        self.nue = torch.from_numpy(np.load(f'../saved_embeddings/synthuniform/dim{dimension}_seed{seed}.npy').astype(np.float32))
+        user_emb = np.load(str(emb_dataset(dataset='synthuniform') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
+        self.nue = torch.from_numpy(user_emb)
         self.num_users, self.dimension = self.nue.shape
         return self.nue
 
 class Synth_Skewed_Embedding(Embedding):
     def get_nue(self, seed, dimension):
-        user_emb = np.load(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}.npy').astype(np.float32)
+        user_emb = np.load(str(emb_dataset(dataset='synthskewed') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
+        # user_emb = np.load(f'../saved_embeddings/synthskewed/dim{dimension}_seed{seed}.npy').astype(np.float32)
         self.nue = torch.from_numpy(normalize(user_emb,  norm = "l1"))
         self.num_users, self.dimension = self.nue.shape
         return self.nue
@@ -49,7 +51,9 @@ class SparseUni(Embedding):
         self.spfrac = spfrac
     
     def get_nue(self, seed, dimension):
-        self.nue = torch.from_numpy(np.load(f'../saved_embeddings/sparse{self.spfrac}_unif/dim{dimension}_seed{seed}.npy').astype(np.float32))
+        user_emb = np.load(str(emb_dataset(dataset=f'sparse{self.spfrac}_unif') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
+        # user_emb = np.load(f'../saved_embeddings/sparse{self.spfrac}_unif/dim{dimension}_seed{seed}.npy').astype(np.float32)
+        self.nue = torch.from_numpy(user_emb)
         self.num_users, self.dimension = self.nue.shape
         return self.nue
 
@@ -58,7 +62,9 @@ class SparseSkew(Embedding):
         self.spfrac = spfrac
     
     def get_nue(self, seed, dimension):
-        self.nue = torch.from_numpy(np.load(f'../saved_embeddings/sparse{self.spfrac}_skew/dim{dimension}_seed{seed}.npy').astype(np.float32))
+        user_emb = np.load(str(emb_dataset(dataset=f'sparse{self.spfrac}_skew') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
+        # self.nue = torch.from_numpy(np.load(f'../saved_embeddings/sparse{self.spfrac}_skew/dim{dimension}_seed{seed}.npy').astype(np.float32))
+        self.nue = torch.from_numpy(user_emb)
         self.num_users, self.dimension = self.nue.shape
         return self.nue
 
@@ -72,7 +78,7 @@ class Movielens_100k_Embedding(Embedding):
         self.num_users, self.dimension = self.nue.shape
         return self.nue
     
-class RentRunway_Embedding(Embedding):
+class RentRunway_Embedding(Embedding): # TODO fix paths
     def get_nue(self, seed, dimension):
         user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy')
         self.nue = torch.from_numpy(normalize(user_emb,  norm = "l1"))
