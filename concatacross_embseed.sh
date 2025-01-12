@@ -2,7 +2,7 @@
 #SBATCH -J concat_seeds
 #SBATCH --array=1-5
 #SBATCH -A gts-jziani3
-#SBATCH --mem=10G
+#SBATCH --mem=2G
 #SBATCH --time=01:00:00
 #SBATCH --output=./concat_seeds.%A_%a.out
 #SBATCH --error=./concat_seeds.%A_%a.error

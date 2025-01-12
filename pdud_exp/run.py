@@ -10,7 +10,7 @@ import torch
 import numpy as np
 
 def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:list, emb_obj:Embedding, \
-                    probability:Probability, temp:float, n_users:int, save_dest:str, experiment_seed = 505): # engagement game
+                    probability:Probability, n_users:int, save_dest:str, experiment_seed = 505): # engagement game
     '''
         dimensions: list of embedding dimensions desired
         emb_seed: is used for loading the saved NMF factorization

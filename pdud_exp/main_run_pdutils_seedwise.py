@@ -57,9 +57,9 @@ def main():
     Path(final_dir).mkdir(parents=True, exist_ok=True)
     final_dest = final_dir + '/embseed_' + str(args.emb_seed) + '.pkl'
     
-    probability = Probability(prob_str = args.prob, temp=1.0, topk=args.topk)
+    probability = Probability(prob_str = args.prob, temp=args.temperature, topk=args.topk)
     run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \
-                    emb_obj, probability, args.temperature, args.nusers, final_dest, args.exp_seed)
+                    emb_obj, probability, args.nusers, final_dest, args.exp_seed)
 
 if __name__ == '__main__':
     main()

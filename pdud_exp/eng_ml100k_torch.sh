@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -J ml100ktopk
-#SBATCH --array=1-100
+#SBATCH --array=1-135
 #SBATCH -A gts-jziani3
-#SBATCH --mem-per-cpu=10G
-#SBATCH --time=24:00:00
-#SBATCH --output=./Sbatch-engtorch/ml100ktopk-pdutil.%A\_%a.out
-#SBATCH --error=./Sbatch-engtorch/ml100ktopk-pdutil.%A\_%a.error
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=12:00:00
+#SBATCH --output=./Sbatch-ml100k/ml100ktopk-pdutil.%A\_%a.out
+#SBATCH --error=./Sbatch-ml100k/ml100ktopk-pdutil.%A\_%a.error
 
 module load anaconda3/2022.05.0.1
 conda activate recsys
