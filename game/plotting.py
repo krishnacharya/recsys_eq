@@ -51,7 +51,8 @@ def plot_utils_tempvar_prodcurves__errbar(dict_df:dict, df_linear:pd.DataFrame, 
     '''
     groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
     cols = groups + ['avg_prod_util', 'avg_user_util']
-    df = df[df['NE_exists'] == True][cols]
+    # df = df[df['NE_exists'] == True][cols]
+    df = df[cols]
     df_agg = df.groupby(groups).agg(['mean', 'sem']) # iters_to_NE will get mean, standard error of mean; we group by dimensions, num_prod
     df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and SEM
     df_agg.reset_index(inplace=True)
@@ -115,7 +116,8 @@ def plot_utils_tempvar_prodcurves_linvssm(dict_df:dict, df_linear:pd.DataFrame, 
     '''
     groups = ['dimension', 'nprod'] # groupby columns, averages out across seeds
     cols = groups + ['avg_prod_util', 'avg_user_util']
-    df = df[df['NE_exists'] == True][cols]
+    # df = df[df['NE_exists'] == True][cols]
+    df = df[cols]
     df_agg = df.groupby(groups).agg(['mean', 'sem']) # iters_to_NE will get mean, standard error of mean; we group by dimensions, num_prod
     df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and SEM
     df_agg.reset_index(inplace=True)
@@ -179,7 +181,8 @@ def plot_4dim_numiternew_errbar(df, filename): # Num iters to NE scaling
     '''
     groups = ['dimension', 'nprod'] # groupby columns
     cols = ['dimension', 'nprod', 'iters_to_NE']
-    df = df[df['NE_exists'] == True][cols]
+    # df = df[df['NE_exists'] == True][cols]
+    df = df[cols]
     df_agg = df.groupby(groups).agg(['mean','sem']) # iters_to_NE will get mean, sem: std/sqrt{#runs}
     df_agg.columns = df_agg.columns.map("_".join) # this is just to flatten multi column iters_to_NE mean and standard error of mean
     df_agg.reset_index(inplace=True)
@@ -239,7 +242,8 @@ def plot_ndim_numiter_errbar(df, filename):  # Num iters to NE scaling 6 dim
         """
         groups = ['dimension', 'nprod']
         cols = ['dimension', 'nprod', 'iters_to_NE']
-        df = df[df['NE_exists'] == True][cols]
+        # df = df[df['NE_exists'] == True][cols]
+        df = df[cols]
         df_agg = df.groupby(groups).agg(['mean', 'sem'])
         df_agg.columns = df_agg.columns.map("_".join)  # Flatten multi-index columns
         df_agg.reset_index(inplace=True)
