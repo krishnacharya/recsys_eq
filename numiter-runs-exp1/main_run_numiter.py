@@ -1,9 +1,9 @@
-import sys
-sys.path.append('../source/')
+# import sys
+# sys.path.append('../source/')
 import argparse
 from utils import load_config
-from Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
-from run import run_numiters
+from game.Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
+from numiter-runs-exp1.run import run_numiters
 from pathlib import Path
 
 

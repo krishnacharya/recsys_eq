@@ -52,7 +52,6 @@ class SparseUni(Embedding):
     
     def get_nue(self, seed, dimension):
         user_emb = np.load(str(emb_dataset(dataset=f'sparse{self.spfrac}_unif') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
-        # user_emb = np.load(f'../saved_embeddings/sparse{self.spfrac}_unif/dim{dimension}_seed{seed}.npy').astype(np.float32)
         self.nue = torch.from_numpy(user_emb)
         self.num_users, self.dimension = self.nue.shape
         return self.nue
@@ -63,7 +62,6 @@ class SparseSkew(Embedding):
     
     def get_nue(self, seed, dimension):
         user_emb = np.load(str(emb_dataset(dataset=f'sparse{self.spfrac}_skew') / f'dim{dimension}_seed{seed}.npy')).astype(np.float32)
-        # self.nue = torch.from_numpy(np.load(f'../saved_embeddings/sparse{self.spfrac}_skew/dim{dimension}_seed{seed}.npy').astype(np.float32))
         self.nue = torch.from_numpy(user_emb)
         self.num_users, self.dimension = self.nue.shape
         return self.nue
@@ -72,7 +70,6 @@ class SparseSkew(Embedding):
 class Movielens_100k_Embedding(Embedding):
     def get_nue(self, seed, dimension):
         emb_path = str(emb_dataset_alg(dataset='movielens100k', alg='nmf') / f'dim{dimension}_seed{seed}.npy')  
-        # user_emb = np.load(f'../saved_embeddings/movielens100k/nmf/dim{dimension}_seed{seed}.npy')
         user_emb = np.load(emb_path).astype(np.float32)
         self.nue = torch.from_numpy(normalize(user_emb,  norm = "l1"))
         self.num_users, self.dimension = self.nue.shape
@@ -80,14 +77,14 @@ class Movielens_100k_Embedding(Embedding):
     
 class RentRunway_Embedding(Embedding): # TODO fix paths
     def get_nue(self, seed, dimension):
-        user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy')
+        user_emb = np.load(f'../saved_embeddings/rentrunway/nmf/dim{dimension}_seed{seed}.npy').astype(np.float32)
         self.nue = torch.from_numpy(normalize(user_emb,  norm = "l1"))
         self.num_users, self.dimension = self.nue.shape
         return self.nue
 
 class AmazonMusic_Embedding(Embedding):
     def get_nue(self, seed, dimension):
-        user_emb = np.load(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}.npy')
+        user_emb = np.load(f'../saved_embeddings/amznmusic/nmf/dim{dimension}_seed{seed}.npy').astype(np.float32)
         self.nue = torch.from_numpy(normalize(user_emb,  norm = "l1"))
         self.num_users, self.dimension = self.nue.shape
         return self.nue
