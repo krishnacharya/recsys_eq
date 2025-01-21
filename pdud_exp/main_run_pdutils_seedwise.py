@@ -1,5 +1,3 @@
-# import sys
-# sys.path.append('../source/')
 import argparse
 from utils.helper import load_config
 from game.Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
