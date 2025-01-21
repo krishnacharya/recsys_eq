@@ -222,7 +222,7 @@ class ProducersEngagementGame:
     #             producers[i] = br
     #             return producers, False
     #     return producers, True
-    def best_response_dynamics(self, max_iter=200, verbose=False):
+    def best_response_dynamics(self, max_iter=500, verbose=False):
         '''
         Single run of best response dynamics starting from random +ve basis vectors for each producer.
         Once we hit a Nash Equilibrium/or max_iterations, stop.
@@ -237,22 +237,26 @@ class ProducersEngagementGame:
         producers = torch.eye(self.dimension)[torch.randint(0, self.dimension, (self.num_producers,))]  # Shape: (N_producers, dimension)
         if verbose:
             print(f"##### PRODUCERS FOR ITER 0\n {producers.sum(dim=0)}") # weight on each dimension
-            tot_utilarr = []
+            # tot_utilarr = []
+            prod_utilarr = []
         for i in range(max_iter):
             producers, converged = self.find_update_best_response(producers)# Update producers and check for convergence
             if verbose:
                 print(f"##### PRODUCERS FOR ITER {i} \n {producers.sum(dim=0)}")
                 _, prod_util, _ = get_all_engagement_utilities(producers, self.users.user_array, self.probability)
-                tot_utilarr.append(prod_util.sum().item())  # Store total utility for diagnostics
-                print('Total utility:', tot_utilarr[-1])
-                print('Producer utilities:', prod_util)
+                prod_utilarr.append(prod_util)  # Store total utility for diagnostics
+                # print('Total utility:', tot_utilarr[-1])
+                # print('Producer utilities:', prod_util)
             if converged:
-                self.BR_dyna_NE.add(tuple(producers.sum(dim=0).tolist()))  # Save NE in a set
-                return converged, producers, producers.sum(dim=0), i
+                if verbose:
+                    return converged, producers, producers.sum(dim=0), i, prod_utilarr
+                else:             
+                    self.BR_dyna_NE.add(tuple(producers.sum(dim=0).tolist()))  # Save NE in a set
+                    return converged, producers, producers.sum(dim=0), i
 
         # When BR dynamics do not converge
         if verbose:
-            return converged, producers, producers.sum(dim=0), i, tot_utilarr
+            return converged, producers, producers.sum(dim=0), i, prod_utilarr
         return converged, producers, producers.sum(dim=0), i
 
     # def best_response_dynamics(self, max_iter = 200, verbose = False):
