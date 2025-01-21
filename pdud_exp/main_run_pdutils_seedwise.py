@@ -57,7 +57,7 @@ def main():
     
     probability = Probability(prob_str = args.prob, temp=args.temperature, topk=args.topk)
     run_producer_game_singleseedsave(common_config['dimensions'], args.emb_seed, common_config['n_prodarr'], \
-                    emb_obj, probability, args.nusers, final_dest, args.exp_seed)
+                    emb_obj, probability, final_dest, args.exp_seed)
 
 if __name__ == '__main__':
     main()

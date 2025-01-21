@@ -1,17 +1,19 @@
 import argparse
-from utils.helper import load_config
 from game.Embeddings import * # get Synth_Uniform_Embedding, Synth_Skewed_Embedding, Movielens_100k_Embedding classes
 from numiter_exp.run import run_numiters
+from game.ServingProbability import Probability
+from utils.helper import load_config
 from pathlib import Path
-
 
 def main():
     parser = argparse.ArgumentParser(description='get experiment configs')
     parser.add_argument('--common_config', type=str, default = 'common_config', help='Path to the common config file')
     parser.add_argument('--nusers', type = int, default = 10000, help = 'number of users, used in synthetic data generation')
     parser.add_argument('--data', type = str, help='Name of the data you want to use')
+    
     parser.add_argument('--prob', type = str, help= 'Kind of probability - softmax or linear')
     parser.add_argument('--temperature', type = float, default = 1.0, help = 'Temperature parameter')
+    
     parser.add_argument('--emb_seed', type = int, default = 17, help = 'Embedding seed')
     parser.add_argument('--runnum', type = str, help = 'run number, each run is of BR dynamics for a given dim, number of producers, nusers')
     parser.add_argument('--save_dir', type = str, default = '../numiters_savedframe/', help= 'directory in which to store the generated dataframe for utility, NE')
@@ -40,12 +42,18 @@ def main():
         raise NotImplementedError
     
     print(f'Temperature is {args.temperature}')
+    probability = Probability(prob_str = args.prob, temp=args.temperature)
 
-    final_dir = args.save_dir + f'embseed{args.emb_seed}/'+ f'{args.data}_{args.prob}_new_temp_{args.temperature}'
+    
+    if 'sparse-' not in args.data:
+        final_dir = args.save_dir + f'embseed{args.emb_seed}/{args.data}_{args.prob}_temp_{args.temperature}_new'
+    else:
+        final_dir = args.save_dir +  f'embseed{args.emb_seed}/{args.data}{args.spfrac}_{args.prob}_temp_{args.temperature}_new'
+
     Path(final_dir).mkdir(parents=True, exist_ok=True)
-    final_dest = final_dir + '/run_' + args.runnum + '.pkl'
-    run_numiters(args.runnum, common_config['dimensions'], args.emb_seed, \
-    common_config['n_prodarr'], emb_obj, args.prob, args.temperature, args.nusers, final_dest)
+    save_dest = final_dir + '/run_' + args.runnum + '.pkl'
+    run_numiters(run=args.runnum, dimensions=common_config['dimensions'], emb_seed=args.emb_seed, n_prodarr=common_config['n_prodarr'], \
+    emb_obj=emb_obj, probability=probability, save_dest=save_dest)
 
 if __name__ == '__main__':
     main()
