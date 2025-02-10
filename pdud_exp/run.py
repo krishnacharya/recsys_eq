@@ -35,7 +35,7 @@ def run_producer_game_singleseedsave(dimensions:list, emb_seed:int, n_prodarr:li
                 di['NE_exists'] = converged
                 di['iters'] = iters
                 di['last_profile_compact'] = last_profile_compact
-                di['producer_dist'] = last_profile_compact / nprod
+                di['producer_dis t'] = last_profile_compact / nprod
                 di['user_dist'] = user_dist
                 dir_prods, prod_utils, user_utils = get_all_engagement_utilities(last_profile, nue, probability)  # add probability object
                 di.update({

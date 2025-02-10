@@ -152,7 +152,7 @@ def plot_utils_tempvar_prodcurves_linvssm(dict_df:dict, df_linear:pd.DataFrame, 
     idx = 0
     fig, ax = plt.subplots()
     ax.set_xscale('log')
-    for nprod, value in nprod_dict.items():
+    for nprod, value in nprod_dict.items(): # value has the softmaxs df_aggs utility value
         linutil_mean = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilmean_key]
         linutil_sem = df_linear_agg[(df_linear_agg['dimension'] == dim)  & (df_linear_agg['nprod'] == nprod)][linutilsem_key]
 
