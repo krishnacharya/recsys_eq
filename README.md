@@ -1,5 +1,5 @@
 # recsys_eq
-Producers Equilibria and Dynamics in Engagement-Driven Recommender Systems
+Code for Producers Equilibria and Dynamics in Engagement-Driven Recommender Systems, accepted at TMLR [https://arxiv.org/abs/2401.16641](url)
 
 Abstract
 
